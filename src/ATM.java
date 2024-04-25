@@ -15,7 +15,6 @@ public class ATM {
     List<Manager> managers;
     List<Customer> customers;
     List<Transaction> transactions;
-
     User currentUser;
 
     public ATM(List<Manager> managers, List<Customer> customers, List<Transaction> transactions, Market market){

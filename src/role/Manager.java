@@ -1,7 +1,8 @@
 package role;
 
 public class Manager extends User {
+
     public Manager(String name){
-        super(name, EnumRole.Manager);
+        super(name, 1, EnumRole.Manager);
     }
 }
