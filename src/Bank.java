@@ -6,6 +6,8 @@ import stock.Market;
 import java.util.ArrayList;
 import java.util.List;
 
+import static frontend.UserSelectionFrame.startGUI;
+
 public class Bank {
     final private ATM atm;
     List<Manager> managers;
@@ -29,10 +31,7 @@ public class Bank {
 
     public void start() {
         System.out.println("launching the bank app...");
-        atm.login(); // When the bank app is first started, ask the user to login.
-        //
-        while(true){
-            atm.input();
-        }
+        atm.login();
+        atm.input();
     }
 }

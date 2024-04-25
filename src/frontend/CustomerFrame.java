@@ -2,7 +2,6 @@ package frontend;
 
 import javax.swing.*;
 import java.awt.event.*;
-import java.awt.*;
 
 public class CustomerFrame extends JFrame{
   private String username;

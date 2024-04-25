@@ -42,7 +42,7 @@ public class UserSelectionFrame extends JFrame{
     }
   }
 
-  public static void main( String[] args ) {
+  public static void startGUI() {
     // create a new frame
     JFrame userSelectionFrame = new UserSelectionFrame();
 

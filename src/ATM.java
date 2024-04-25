@@ -9,6 +9,8 @@ import stock.Market;
 import java.util.List;
 import java.util.UUID;
 
+import static frontend.UserSelectionFrame.startGUI;
+
 public class ATM {
     List<Manager> managers;
     List<Customer> customers;
@@ -26,6 +28,8 @@ public class ATM {
     public void login(){
         System.out.println("Please login");
         this.currentUser = new User("manager_0", EnumRole.Manager); // TODO
+
+        startGUI();
     }
 
     public void input(){
