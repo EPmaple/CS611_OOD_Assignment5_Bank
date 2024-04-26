@@ -30,6 +30,7 @@ public class Bank {
     }
 
     public void start() {
+        startGUI();
         System.out.println("launching the bank app...");
         atm.login();
         atm.input();
