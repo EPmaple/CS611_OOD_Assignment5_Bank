@@ -12,6 +12,8 @@ public class ManagerFrame extends JFrame{
 
     JButton jbtSetRates = new JButton("Set Currency Rates");
 
+    JButton jbtViewDailyReports = new JButton("View Daily Reports");
+
     JPanel mainPanel = new JPanel(new GridLayout(3, 0));
     mainPanel.add(jbtViewCustomers);
     mainPanel.add(jbtMaintainStocks);
@@ -22,6 +24,7 @@ public class ManagerFrame extends JFrame{
     jbtViewCustomers.addActionListener(new ViewCustomersListener());
     jbtMaintainStocks.addActionListener(new MaintainStocksListener());
     jbtSetRates.addActionListener(new SetRatesListener());
+    jbtViewDailyReports.addActionListener(new ViewDailyReportsListener());
   }
 
   class ViewCustomersListener implements ActionListener {
@@ -42,6 +45,13 @@ public class ManagerFrame extends JFrame{
     public void actionPerformed(ActionEvent e) {
       SetCurrencyRatesFrame scrFrame = new SetCurrencyRatesFrame();
       scrFrame.showWindow();
+    }
+  }
+
+  class ViewDailyReportsListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      DailyReportFrame drFrame = new DailyReportFrame();
+      drFrame.showWindow();
     }
   }
 
