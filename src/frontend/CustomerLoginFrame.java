@@ -86,18 +86,16 @@ public class CustomerLoginFrame extends JFrame{
     }
   }
 
-  public static void showWindow() {
-    // create a new frame
-    JFrame customerLoginFrame = new CustomerLoginFrame();
+  public void showWindow() {
 
     // init frame info
-    customerLoginFrame.setTitle( "Customer Login" );
-    customerLoginFrame.setSize( 300, 200 );
-    customerLoginFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
-    customerLoginFrame.setLocationRelativeTo(null); // Center the frame on the screen
+    this.setTitle( "Customer Login" );
+    this.setSize( 300, 200 );
+    this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
+    this.setLocationRelativeTo(null); // Center the frame on the screen
 
     // turn it on 
-    customerLoginFrame.setVisible(true);
+    this.setVisible(true);
   }
 
 }
