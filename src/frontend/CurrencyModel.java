@@ -2,6 +2,10 @@ package frontend;
 
 import java.util.*;
 
+/*
+ * Uncomplete
+ */
+
 public class CurrencyModel {
   private static final String DOLLAR = "$";
   private static final String YUAN = "¥";

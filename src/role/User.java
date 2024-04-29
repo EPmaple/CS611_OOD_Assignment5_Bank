@@ -1,23 +1,24 @@
 package role;
 
-import account.Account;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 public class User {
-    private String name;
-    private UUID id;
-    private EnumRole type;
-    private List<Account> accounts;
-    private int accounts_limit; // 3 <=> The user can have at most 3 accounts
+    protected String name;
+    protected UUID id;
+    protected EnumRole role;
 
-    public User(String name, int accounts_limit, EnumRole type){
+    public User(String name, EnumRole role){
         this.name = name;
         this.id = UUID.randomUUID();
-        this.accounts = new ArrayList<>();
-        this.accounts_limit = accounts_limit;
-        this.type = type;
+        this.role = role;
+    }
+    public String get_name(){
+        return name;
+    }
+    public UUID get_id(){
+        return id;
+    }
+    public void set_id(UUID newid){
+        id = newid;
     }
 }

@@ -1,6 +1,9 @@
 package frontend;
 
 import javax.swing.*;
+
+import role.Customer;
+
 import java.awt.event.*;
 import java.awt.*;
 
@@ -52,16 +55,18 @@ public class CustomerLoginFrame extends JFrame{
 
   class LoginListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      String username = jtfUsername.getText();
-      // jtfPassword.getPassword() returns char[], and is converted to String
-      String password = new String(jtfPassword.getPassword());
-      if (mwInstance.login(username, password)) {
-        System.out.println("Login success.");
-      } else {
-        jlbMessage.setText("Login failed.");
-        System.out.println("Login failed.");
-      }
-      System.out.println("Login button clicked");
+      // String username = jtfUsername.getText();
+      // // jtfPassword.getPassword() returns char[], and is converted to String
+      // String password = new String(jtfPassword.getPassword());
+      // if (mwInstance.login(username, password)) {
+      //   System.out.println("Login success.");
+      // } else {
+      //   jlbMessage.setText("Login failed.");
+      //   System.out.println("Login failed.");
+      // }
+      // System.out.println("Login button clicked");
+      CustomerFrame customerFrame = new CustomerFrame("Tony");
+      customerFrame.showWindow();
     }
   }
 
@@ -81,40 +86,16 @@ public class CustomerLoginFrame extends JFrame{
     }
   }
 
-  public static void showWindow() {
-    // create a new frame
-    JFrame customerLoginFrame = new CustomerLoginFrame();
+  public void showWindow() {
 
     // init frame info
-    customerLoginFrame.setTitle( "Customer Login" );
-    customerLoginFrame.setSize( 300, 200 );
-    customerLoginFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
-    customerLoginFrame.setLocationRelativeTo(null); // Center the frame on the screen
+    this.setTitle( "Customer Login" );
+    this.setSize( 300, 200 );
+    this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
+    this.setLocationRelativeTo(null); // Center the frame on the screen
 
     // turn it on 
-    customerLoginFrame.setVisible(true);
+    this.setVisible(true);
   }
 
-
-  // public static void main( String[] args ) {
-  //   // create a new frame
-  //   JFrame customerLoginFrame = new CustomerLoginFrame();
-
-  //   // init frame info
-  //   customerLoginFrame.setTitle( "Customer Login" );
-  //   customerLoginFrame.setBounds(0, 0, 300, 200);
-  //   customerLoginFrame.setSize( 300, 200 );
-  //   customerLoginFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
-  //   customerLoginFrame.setLocationRelativeTo(null); // Center the frame on the screen
-
-  //   // turn it on 
-  //   customerLoginFrame.setVisible(true);
-
-  //   // // create a window
-  //   // JWindow customerLoginWindow = new JWindow();
-  //   // customerLoginWindow.add(customerLoginFrame);
-  //   // customerLoginWindow.setSize(300, 200); 
-  //   // customerLoginWindow.setLocationRelativeTo(null); // Center the frame on the screen
-  //   // customerLoginWindow.setVisible(true);
-  // }
 }

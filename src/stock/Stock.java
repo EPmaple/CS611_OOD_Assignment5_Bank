@@ -1,18 +1,36 @@
 package stock;
 
-import java.util.UUID;
+import utility.Read;
+import utility.Write;
 
 public class Stock {
     private String name;
-    private float price;
-    private UUID id;
-    private int quantity;
-
-
-    public Stock(String name, float price, int quantity) {
+    private double price;
+    private boolean onSale;
+    public Stock(String name,String price,String onSale){
         this.name = name;
+        this.price = Double.parseDouble(price);
+        this.onSale = onSale.equals("true");
+    }
+    public double getPrice(){
+        return price;
+    }
+    public String getName(){
+        return name;
+    }
+    public boolean isOnSale(){
+        return onSale;
+    }
+    public void setPrice(double price){
         this.price = price;
-        this.id = UUID.randomUUID();
-        this.quantity = quantity;
+        Write.rewriteStock(this);
+    }
+    public void setOnSale(boolean val){
+        onSale = val;
+        Write.rewriteStock(this);
+    }
+    @Override
+    public String toString(){
+        return name+","+price+","+onSale;
     }
 }

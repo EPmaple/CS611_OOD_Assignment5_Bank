@@ -6,10 +6,10 @@ import transaction.Deposit;
 import transaction.Transaction;
 import stock.Market;
 
+import static frontend.UserSelectionFrame.startGUI;
+
 import java.util.List;
 import java.util.UUID;
-
-import static frontend.UserSelectionFrame.startGUI;
 
 public class ATM {
     List<Manager> managers;
