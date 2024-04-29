@@ -1,7 +1,92 @@
 package role;
+import java.util.ArrayList;
+import java.util.List;
+import stock.Market;
+import stock.Stock;
+import transaction.Stock_Transaction;
+import transaction.Transaction;
+import utility.Read;
+import utility.Write;
 
 public class Manager extends User {
-    public Manager(String name){
+    private static Manager manager;
+    private final String password;
+    private Manager(String name,String password){
         super(name, EnumRole.Manager);
+        this.password = password;
+    }
+    public static boolean log_in(String password){
+        if(manager == null){
+            manager = new Manager("manager","123456");
+        }
+        return password.equals(manager.password);
+
+    }
+    public static Manager get_manager(){
+        if(manager == null){
+            manager = new Manager("manager","123456");
+        }
+        return manager;
+    }
+    public boolean createStock(String stockName,String price){
+        Stock stock = new Stock(stockName,price,"true");
+        Write.rewriteStock(stock);
+        return true;
+    }
+    public boolean changeStockPrice(String stockName,String price){
+        Stock stock = Market.getInstance().getStock(stockName);
+        if(stock == null){
+            return false;
+        }
+        stock.setPrice(Double.parseDouble(price));
+        return true;
+    }
+    public boolean changeStockStatus(String stockName,boolean status){
+        Stock stock = Market.getInstance().getStock(stockName);
+        if(stock == null){
+            return false;
+        }
+        stock.setOnSale(status);
+        return true;
+    }
+    public List<Customer> getCustomerWithLoan(){
+        List<Customer> customers = Read.readUsers();
+        List<Customer> re = new ArrayList<>();
+        for(int i =0;i<customers.size();i++){
+            if(customers.get(i).get_has_loan()){
+                re.add(customers.get(i));
+            }
+        }
+        return re;
+    }
+    public List<Customer> getWealthyCustomer(){
+        List<Customer> customers = Read.readUsers();
+        List<Customer> re = new ArrayList<>();
+        for(int i =0;i<customers.size();i++){
+            if(customers.get(i).has_stock_account()){
+                re.add(customers.get(i));
+            }
+        }
+        return re;
+    }
+    public List<Transaction> getTransactionToday(String time){
+        List<Transaction> transactions = Read.readTransaction();
+        List<Transaction> re = new ArrayList<Transaction>();
+        for(int i =0;i<transactions.size();i++){
+            if(transactions.get(i).getTime().equals(time)){
+                re.add(transactions.get(i));
+            }
+        }
+        return re;
+    }
+    public List<Stock_Transaction> getStockTransactionToday(String time){
+        List<Stock_Transaction> transactions = Read.readStockTransaction();
+        List<Stock_Transaction> re = new ArrayList<Stock_Transaction>();
+        for(int i =0;i<transactions.size();i++){
+            if(transactions.get(i).getTime().equals(time)){
+                re.add(transactions.get(i));
+            }
+        }
+        return re;
     }
 }
