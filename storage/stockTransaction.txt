@@ -1,0 +1,15 @@
+Gtl,Apple,buy,50,75.0,0
+Gtl,Apple,buy,50,75.0,0
+Gtl,Apple,sale,10,15.0,0
+Gtl,Apple,buy,50,75.0,0
+Gtl,Apple,sale,10,15.0,0
+Gtl,Apple,buy,50,75.0,0
+Gtl,Apple,sale,10,15.0,0
+Gtl,Apple,buy,50,75.0,0
+Gtl,Apple,sale,10,15.0,0
+Gtl,Apple,buy,50,75.0,0
+Gtl,Apple,sale,10,15.0,0
+Gtl,Apple,buy,50,75.0,0
+Gtl,Apple,sale,10,15.0,0
+Gtl,Apple,buy,50,75.0,0
+Gtl,Apple,sale,10,15.0,0
