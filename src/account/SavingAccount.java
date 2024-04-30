@@ -4,9 +4,31 @@ import transaction.Transaction;
 import utility.Read;
 import utility.Write;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class SavingAccount {
+public class SavingAccount extends Account{
+    private List<AccountListener> listeners = new ArrayList<AccountListener>();
+
+    public void addAccountListener(AccountListener listener) {
+        // System.out.println("listener added: " + listener);
+        listeners.add(listener);
+    }
+
+    public void removeAccountListener(AccountListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyBalanceUpdated() {
+        // System.out.println("Is there any listeners?");
+        for (AccountListener listener : listeners) {
+            // System.out.println(listener.toString());
+            listener.balanceUpdated(this.type);
+        }
+    }
+
+    // ***************************************
+
     private String name;
     private double balance=0;
     private String type;
@@ -60,6 +82,7 @@ public class SavingAccount {
         this.balance+=amount;
         Write.rewriteSavingAccount(this);
         Write.writeTransaction(new Transaction(name,type,"transferIn",String.valueOf(amount),"0"));
+        notifyBalanceUpdated();
     }
     public boolean transferOut(double amount){
         if(balance<amount* (1.0+Account.transfer_rate)){
@@ -73,6 +96,7 @@ public class SavingAccount {
         this.balance-=amount* (1.0+Account.transfer_rate);
         Write.rewriteSavingAccount(this);
         Write.writeTransaction(new Transaction(name,type,"transferOut",String.valueOf(amount* (1.0+Account.transfer_rate)),"0"));
+        notifyBalanceUpdated();
         return true;
     }
 }

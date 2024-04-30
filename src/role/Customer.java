@@ -1,15 +1,39 @@
 package role;
 import account.Account;
+import account.AccountListener;
 import account.CheckingAccount;
 import account.SavingAccount;
 import account.StockAccount;
 import utility.Read;
 import utility.Write;
+import utility.Constants;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public class Customer extends User {
+    private List<CustomerListener> listeners = new ArrayList<CustomerListener>();
+
+    public void addCustomerListener(CustomerListener listener) {
+        // System.out.println("listener added: " + listener);
+        listeners.add(listener);
+    }
+
+    public void removeCustomerListener(CustomerListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyAccountUpdated(String accountType) {
+        // System.out.println("Current total: " + listeners.size());
+        for (CustomerListener listener : listeners) {
+            // System.out.println("balance update check");
+            listener.accountUpdated(accountType);
+        }
+    }
+
+    // ******************************************
+
     private String password;
     private boolean check_account=false;
     private boolean saving_account=false;
@@ -75,6 +99,7 @@ public class Customer extends User {
         SavingAccount savingAccount = new SavingAccount(name,"0","saving","false");
         Write.rewriteSavingAccount(savingAccount);
         Write.rewriteUserInfo(this);
+        notifyAccountUpdated(Constants.SAVING);
         return true;
     }
     public boolean createCheckingAccount(){
@@ -85,6 +110,7 @@ public class Customer extends User {
         Write.rewriteCheckingAccount(checkingAccount);
         check_account = true;
         Write.rewriteUserInfo(this);
+        notifyAccountUpdated(Constants.CHECKING);
         return true;
     }
     public boolean request_loan(int loan_num){
@@ -132,6 +158,7 @@ public class Customer extends User {
         stockAccount.transferIn(1000);
         this.stocking_account = true;
         Write.rewriteUserInfo(this);
+        notifyAccountUpdated(Constants.STOCKING);
         return true;
     }
     public StockAccount getStockAccount(){

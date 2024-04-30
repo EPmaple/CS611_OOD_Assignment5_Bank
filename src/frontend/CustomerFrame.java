@@ -1,27 +1,85 @@
 package frontend;
 
+import role.*;
+
 import javax.swing.*;
+
+import account.*;
+import utility.*;
+
 import java.awt.event.*;
 import java.awt.*;
 
-public class CustomerFrame extends JFrame{
-  private String username;
+public class CustomerFrame extends JFrame implements AccountListener, CurrencyModelListener{
+  private CurrencyModel cmInstance = CurrencyModel.getInstance();
+  private Customer customer;
+  // private CheckingAccount checkingAccount;
+  private JButton jbtCheckingAccount = new JButton();
+
+  private JButton jbtSavingAccount = new JButton();
+  private JButton jbtStockingAccount = new JButton();
+
+  // private JButton jbtCheckingAccount = new JButton();
+  JPanel rightPanel = new JPanel(new GridLayout(5, 0));
   // also grab the account info from middleware as well
 
-  public CustomerFrame(String username) {
-    this.username = username;
+  public CustomerFrame(Customer customer) {
+    this.customer = customer;
+    cmInstance.addCurrencyModelListener(this);
     /*
      * If account info is null, or empty, then show create button, else take
      * the info and create another button that allows for viewing
      */
+    // checking account button
+    if (customer.has_check_account()) {
+      // balanceUpdated(Constants.CHECKING);
+      jbtCheckingAccount.setText("checking: " + cmInstance.convertToCurrentCurrency(customer.getCheckingAccount().getBalance()));
+      CheckingAccountListener caListener = new CheckingAccountListener();
+      jbtCheckingAccount.addActionListener(caListener);
 
-    JButton jbtCreateCheckingAccount = new JButton("Create Checking Account"); // make several states of this
-    JButton jbtCreateSavingsAccount = new JButton("Create Savings Account"); // make several states of this
-    JButton jbtCreateSecuritiesAccount = new JButton("Create Securities Account through Savings Account"); // make several states of this
+    } else {
+      jbtCheckingAccount.setText("Create Checking Account");
+      CreateCheckingAccountListener ccaListener = new CreateCheckingAccountListener();
+      jbtCheckingAccount.addActionListener(ccaListener);
+
+    }
+    rightPanel.add(jbtCheckingAccount);
+
+    // saving account button
+    if (customer.has_saving_account()) {
+      // balanceUpdated(Constants.SAVING);
+      jbtSavingAccount.setText("saving: " + cmInstance.convertToCurrentCurrency(customer.getSavingAccount().getBalance()));
+      // create a saving account listener
+      SavingAccountListener saListener = new SavingAccountListener();
+      jbtSavingAccount.addActionListener(saListener);
+
+    } else {
+      jbtSavingAccount.setText("Create Saving Account");
+      CreateSavingsAccountListener csaListener = new CreateSavingsAccountListener();
+      jbtSavingAccount.addActionListener(csaListener);
+
+    }
+    rightPanel.add(jbtSavingAccount);
+
+    // stocking account
+    if (customer.has_stock_account()) {
+      jbtStockingAccount.setText("saving: " + cmInstance.convertToCurrentCurrency(customer.getStockAccount().getBalance()));
+      StockingAccountListener stockAListener = new StockingAccountListener();
+      jbtStockingAccount.addActionListener(stockAListener);
+
+      rightPanel.add(jbtStockingAccount);
+
+    } else {
+      JLabel jlbStockingAccount = new JLabel("Create Securities Account through Saving Account");
+      rightPanel.add(jlbStockingAccount);
+
+    }
+    
+
     JButton jbtRequestLoan = new JButton("Request Loan");
     JButton jbtViewTransaction = new JButton("View Transaction");
     // JButton 
-    JLabel jlbUsername = new JLabel(username);
+    JLabel jlbUsername = new JLabel(customer.get_name());
     JLabel jlbEmpty = new JLabel();
     JLabel jlbMessage = new JLabel("Select your transaction");
 
@@ -31,11 +89,6 @@ public class CustomerFrame extends JFrame{
     leftPanel.add(jlbEmpty);
     leftPanel.add(jlbMessage);
 
-    JPanel rightPanel = new JPanel();
-    rightPanel.setLayout(new GridLayout(5, 0));
-    rightPanel.add(jbtCreateCheckingAccount);
-    rightPanel.add(jbtCreateSavingsAccount);
-    rightPanel.add(jbtCreateSecuritiesAccount);
     rightPanel.add(jbtRequestLoan);
     rightPanel.add(jbtViewTransaction);
 
@@ -46,11 +99,11 @@ public class CustomerFrame extends JFrame{
 
     add(mainPanel);
 
-    jbtCreateCheckingAccount.addActionListener(new CreateCheckingAccountListener());
-    jbtCreateSavingsAccount.addActionListener(new CreateSavingsAccountListener());
-    jbtCreateSecuritiesAccount.addActionListener(new CreateSecuritiesAccountListener());
     jbtRequestLoan.addActionListener(new RequestLoanListener());
     jbtViewTransaction.addActionListener(new ViewTransactionListener());
+
+    // open up a window that allows for deposit, transfer, withdraw,
+    // jbtCheckingAccount.addActionListener(...);
   }
 
   class CreateCheckingAccountListener implements ActionListener {
@@ -58,8 +111,15 @@ public class CustomerFrame extends JFrame{
       /*
        * pass the account to this checking account frame?
        */
-      BankingAccountCreationFrame bankingAccountCreationFrame = new BankingAccountCreationFrame("checking");
+      BankingAccountCreationFrame bankingAccountCreationFrame = new BankingAccountCreationFrame(customer, CustomerFrame.this, Constants.CHECKING);
       bankingAccountCreationFrame.showWindow();
+    }
+  }
+
+  class CheckingAccountListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      BankingAccountFrame baFrame = new BankingAccountFrame(CustomerFrame.this, customer, Constants.CHECKING);
+      baFrame.showWindow();
     }
   }
 
@@ -68,18 +128,21 @@ public class CustomerFrame extends JFrame{
       /*
        * pass the account to this checking account frame?
        */
-      BankingAccountCreationFrame bankingAccountCreationFrame = new BankingAccountCreationFrame("savings");
+      BankingAccountCreationFrame bankingAccountCreationFrame = new BankingAccountCreationFrame(customer, CustomerFrame.this, Constants.SAVING);
       bankingAccountCreationFrame.showWindow();
     }
   }
 
-  class CreateSecuritiesAccountListener implements ActionListener {
+  class SavingAccountListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      /*
-       * pass the account to this checking account frame?
-       */
-      BankingAccountCreationFrame bankingAccountCreationFrame = new BankingAccountCreationFrame("securities");
-      bankingAccountCreationFrame.showWindow();
+      BankingAccountFrame baFrame = new BankingAccountFrame(CustomerFrame.this, customer, Constants.SAVING);
+      baFrame.showWindow();
+    }
+  }
+
+  class StockingAccountListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      // ...
     }
   }
 
@@ -98,12 +161,28 @@ public class CustomerFrame extends JFrame{
     }
   }
 
-  public void showWindow() {
-    // create a new frame
-    // JFrame customerFrame = new CustomerFrame(username);
+  @Override
+  public void balanceUpdated(String accountType) {
+    if (accountType.equals(Constants.CHECKING)) {
+      String msg = "There is a balance update to your " + accountType + " account";
+      regenerateFrame(msg);
 
+    } else if (accountType.equals(Constants.SAVING)) {
+      String msg = "There is a balance update to your " + accountType + " account";
+      regenerateFrame(msg);
+
+    } else if (accountType.equals(Constants.STOCKING)) {
+
+
+    } else {
+      System.out.println("The account type in balanceUpdate() is: " + 
+      accountType + ", which is not supported.");
+    }
+  }
+
+  public void showWindow() {
     // init frame info
-    this.setTitle( "Customer: " + username );
+    this.setTitle( "Customer: " + customer.get_name() );
     this.setSize( 500, 300 );
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
     this.setLocationRelativeTo(null); // Center the frame on the screen
@@ -111,25 +190,18 @@ public class CustomerFrame extends JFrame{
     // turn it on 
     this.setVisible(true);
   }
+
+  public CustomerFrame regenerateFrame(String msg) {
+    JOptionPane.showMessageDialog(rootPane, msg);
+    this.dispose();
+    CustomerFrame customerFrame = new CustomerFrame(customer);
+    customerFrame.showWindow();
+    return customerFrame;
+  }
+
+  public void currencyUpdate() {
+    String msg = "The currency in use has been changed, or the current" +
+    " currency's conversion rate has been changed.";
+    regenerateFrame(msg);
+  }
 }
-
-/*
- * Deposit frame
- * each button shows the current balances
- * click on the account button, takes in to viewing the current balances, to deposit, to withdraw
- */
-
-  /*
-   * a frame issues a change in the current currency, via JCombobox
-   * 
-   * set the currentCurrency in CurrencyModel accordingly
-   * 
-   * CurrencyModel notifies all its listeners (which are also frames), these
-   * frames would implement the listener interface to make sure they implement
-   * the method to update the numbers they are currently showing
-   * 
-   * for deposit, we have the currentCurrencyType, then we take the number,
-   * get the rate from currentCurrency to DOLLAR, and then save that to the
-   * db
-   */
-

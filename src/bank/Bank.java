@@ -1,3 +1,4 @@
+package bank;
 import role.Customer;
 import role.Manager;
 import transaction.Stock_Transaction;
