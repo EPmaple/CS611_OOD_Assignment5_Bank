@@ -7,11 +7,11 @@ import utility.Write;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SavingAccount {
+public class SavingAccount extends Account{
     private List<AccountListener> listeners = new ArrayList<AccountListener>();
 
     public void addAccountListener(AccountListener listener) {
-        System.out.println("listener added: " + listener);
+        // System.out.println("listener added: " + listener);
         listeners.add(listener);
     }
 
@@ -20,9 +20,9 @@ public class SavingAccount {
     }
 
     private void notifyBalanceUpdated() {
-        System.out.println("Is there any listeners?");
+        // System.out.println("Is there any listeners?");
         for (AccountListener listener : listeners) {
-            System.out.println(listener.toString());
+            // System.out.println(listener.toString());
             listener.balanceUpdated(this.type);
         }
     }

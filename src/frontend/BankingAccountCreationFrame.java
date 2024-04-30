@@ -73,7 +73,7 @@ public class BankingAccountCreationFrame extends JFrame{
 
       // then we make the deposit, and notifyBalanceUpdated will work
       // as intended with its list of listeners
-      customer.getCheckingAccount().transferIn(depositAmt);
+      checkingAccount.transferIn(depositAmt);
 
       // now the parent frame can get the balance from the account
       // w/o errors
@@ -85,11 +85,11 @@ public class BankingAccountCreationFrame extends JFrame{
 
       // register the parent frame as a subject for notificaiton
       SavingAccount savingAccount = customer.getSavingAccount();
-      savingAccount.addAccountListener((AccountListener)parentFrame);
+      savingAccount.addAccountListener(parentFrame);
 
       // then we make the deposit, and notifyBalanceUpdated will work
       // as intended with its list of listeners
-      customer.getSavingAccount().transferIn(depositAmt);
+      savingAccount.transferIn(depositAmt);
 
       // now the parent frame can get the balance from the account
       // w/o errors
