@@ -1,6 +1,11 @@
 package frontend;
 
 import javax.swing.*;
+
+import account.*;
+import role.Customer;
+import utility.*;
+
 import java.awt.event.*;
 import java.awt.*;
 
@@ -8,9 +13,13 @@ public class BankingAccountCreationFrame extends JFrame{
   private String accountType;
   private JTextField jtfDeposit = new JTextField();
   private JLabel jlbMsg = new JLabel();
+  private CustomerFrame parentFrame;
+  private Customer customer;
 
-  public BankingAccountCreationFrame(String accountType) {
+  public BankingAccountCreationFrame(Customer customer, CustomerFrame parentFrame, String accountType) {
+    this.parentFrame = parentFrame;
     this.accountType = accountType;
+    this.customer = customer;
 
     JLabel jlbDeposit = new JLabel("Initial deposit: ");
     JButton jbtCreate = new JButton("Create Account");
@@ -37,16 +46,71 @@ public class BankingAccountCreationFrame extends JFrame{
       // accountType account has been created with $deposit
       try {
         double depositeAmt = Double.parseDouble(jtfDeposit.getText());
-        String msg = accountType + " account has been created with "+
-        "$" + depositeAmt;
-        PopupFrame popup = new PopupFrame(msg);
-        popup.showWindow();
-        dispose();
+
+        if (depositeAmt < 0 ) {
+          jlbMsg.setText("Please enter a valid positive number");
+          return;
+
+        } else {
+          initBankingAccount(depositeAmt);
+
+        }
 
       } catch (NumberFormatException err) {
-        jlbMsg.setText("Please enter a number");
+        jlbMsg.setText("Please enter a valid positive number");
       }
     }
+  }
+
+  private void initBankingAccount(double depositAmt) {
+    if (accountType.equals(Constants.CHECKING)) {
+      // create the account for the user
+      customer.createCheckingAccount();
+
+      // register the parent frame as a subject for notificaiton
+      CheckingAccount checkingAccount = customer.getCheckingAccount();
+      checkingAccount.addAccountListener(parentFrame);
+
+      // then we make the deposit, and notifyBalanceUpdated will work
+      // as intended with its list of listeners
+      customer.getCheckingAccount().transferIn(depositAmt);
+
+      // now the parent frame can get the balance from the account
+      // w/o errors
+      // parentFrame.updateCheckingAccountButtonListener();
+
+    } else if (accountType.equals(Constants.SAVING)) {
+      // create the account for the user
+      customer.createSavingAccount();
+
+      // register the parent frame as a subject for notificaiton
+      SavingAccount savingAccount = customer.getSavingAccount();
+      savingAccount.addAccountListener((AccountListener)parentFrame);
+
+      // then we make the deposit, and notifyBalanceUpdated will work
+      // as intended with its list of listeners
+      customer.getSavingAccount().transferIn(depositAmt);
+
+      // now the parent frame can get the balance from the account
+      // w/o errors
+      // parentFrame.updateSavingAccountButtonListener();
+
+    } else if (accountType.equals(Constants.STOCKING)) {
+
+
+    } else {
+      System.out.println("accountType passed into BankingAccountCreationFrame" +
+      " is not supported: " + accountType);
+    }
+
+    // popup window for notification
+    String msg = accountType + " account has been created with "+
+    "$" + depositAmt;
+    JOptionPane.showMessageDialog(rootPane, msg);
+    // PopupFrame popup = new PopupFrame(msg);
+    // popup.showWindow();
+    // dispose the create account window 
+    dispose();
   }
 
   public void showWindow() {
