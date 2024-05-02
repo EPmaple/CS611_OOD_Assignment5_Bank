@@ -1,16 +1,26 @@
 package frontend;
 
 import javax.swing.*;
+
+import role.Manager;
+import stock.*;
+import utility.Read;
+
 import java.awt.event.*;
+import java.text.DecimalFormat;
 import java.awt.*;
 
-public class ManagerViewStocksFrame extends JFrame{
-  private JTextField jtfUpdate = new JTextField("Enter name of stock");
+import java.util.List;
+
+public class ManagerViewStocksFrame extends JFrame implements StockListener{
+  private Middleware mwInstance = Middleware.getInstance();
+  private Manager manager = Manager.get_manager();
+  private CurrencyModel cmInstance = CurrencyModel.getInstance();
+  private JTextField jtfUpdateStock = new JTextField("Enter name of stock");
   private JTextField jtfUpdatePrice = new JTextField("Enter price of stock");
 
-  private JTextField jtfDelete = new JTextField("Enter name of stock to delete");
+  private JTextField jtfDeleteStock = new JTextField("Enter name of stock to delete");
 
-  private JTextField jtfAddStockSymbol = new JTextField("Stock symbol");
   private JTextField jtfAddStockName = new JTextField("Stock name");
   private JTextField jtfAddStockPrice = new JTextField("Stock price");
 
@@ -19,15 +29,16 @@ public class ManagerViewStocksFrame extends JFrame{
   private JPanel cardPanel;
 
   public ManagerViewStocksFrame() {
+    mwInstance.addStockListener(this);
     // to create the panel responsible for updating the price of a
     // stock
-    JLabel jlbUpdate = new JLabel("Enter the name, and the price of the stock you want to update it to");
+    JLabel jlbUpdate = new JLabel("Enter the name of the stock to update, and the corresponding price");
     JPanel updateMsgPanel = new JPanel();
     updateMsgPanel.add(jlbUpdate);
 
-    JButton jbtUpdateConfirm = new JButton("Confirm");
+    JButton jbtUpdateConfirm = createUpdateButton();
     JPanel updateActionPanel = new JPanel(new GridLayout(0, 3));
-    updateActionPanel.add(jtfUpdate);
+    updateActionPanel.add(jtfUpdateStock);
     updateActionPanel.add(jtfUpdatePrice);
     updateActionPanel.add(jbtUpdateConfirm);
 
@@ -37,21 +48,20 @@ public class ManagerViewStocksFrame extends JFrame{
 
     // *************************
     // creating a panel responsible for deleting an existing stock
-    JButton jbtDeleteConfirm = new JButton("Confirm");
+    JButton jbtDeleteConfirm = createDeleteButton();
     JPanel deletePanel = new JPanel(new GridLayout(0, 2));
-    deletePanel.add(jtfDelete);
+    deletePanel.add(jtfDeleteStock);
     deletePanel.add(jbtDeleteConfirm);
 
     // *************************
     // creating a panel responsible for adding a new stock of a 
     // specified price to the stock market
-    JLabel jlbAdd = new JLabel("Enter the symbol, name, and price of the stock you want to add.");
+    JLabel jlbAdd = new JLabel("Enter the name, and price of the stock you want to add.");
     JPanel addMsgPanel = new JPanel();
     addMsgPanel.add(jlbAdd);
 
-    JButton jbtAddStockConfirm = new JButton("Confirm");
-    JPanel addActionPanel = new JPanel(new GridLayout(0, 4));
-    addActionPanel.add(jtfAddStockSymbol);
+    JButton jbtAddStockConfirm = createAddStockButton();
+    JPanel addActionPanel = new JPanel(new GridLayout(0, 3));
     addActionPanel.add(jtfAddStockName);
     addActionPanel.add(jtfAddStockPrice);
     addActionPanel.add(jbtAddStockConfirm);
@@ -77,13 +87,9 @@ public class ManagerViewStocksFrame extends JFrame{
 
     // ***************************
 
-    String placeholderData[][] = {
-      {"1", "2", "3", "4"},
-      {"2", "Tony", "Created savings with $2", "8"}
-    };
-    String columnHeaders[] = {"Symbol", "Name", "Current Price", "Percent Fluctuation"};
+    String columnHeaders[] = {"Name", "Current Price", "Price Change"};
 
-    JTable jt = new JTable(placeholderData, columnHeaders);
+    JTable jt = new JTable(convertStocksToData(), columnHeaders);
     JScrollPane sp = new JScrollPane(jt);
 
     JPanel mainPanel = new JPanel(new BorderLayout());
@@ -95,10 +101,45 @@ public class ManagerViewStocksFrame extends JFrame{
     // ***************************
 
     jcbPanelOptions.addActionListener(new PanelOptionsListener());
+  }
 
-    jbtUpdateConfirm.addActionListener(new UpdateListener());
-    jbtDeleteConfirm.addActionListener(new DeleteListener());
-    jbtAddStockConfirm.addActionListener(new AddStockListener());
+  private String[][] convertStocksToData() {
+    List<Stock> stocks = Read.readStock();
+
+    String[][] data = new String[stocks.size()][3];
+    for (int i = 0; i < stocks.size(); i++) {
+      Stock stock = stocks.get(i);
+
+      if (stock.isOnSale()) {
+        data[i][0] = stock.getName();
+        double price = stock.getPrice();
+        data[i][1] = cmInstance.convertToCurrentCurrency(price);
+        data[i][2] = getStockPriceChange(stock);
+      }
+    }
+    return data;
+  }
+
+  private String getStockPriceChange(Stock stock) {
+    List<Double> prices = stock.getHistoryPrice();
+
+    if (prices.size() <= 1) {
+        return "-";
+    }
+
+    // Get the last price and the one before it to calculate the change
+    double lastPrice = prices.get(prices.size() - 1);
+    double previousPrice = prices.get(prices.size() - 2);
+
+    if (previousPrice == 0) {
+        return "Previous price is zero, cannot calculate percentage change";
+    }
+
+    double percentageChange = ((lastPrice - previousPrice) / previousPrice) * 100;
+
+    // Format the percentage change to two decimal places
+    DecimalFormat df = new DecimalFormat("#.##");
+    return df.format(percentageChange) + "%";
   }
 
   // an actionlistener for the combobox to switch between panels
@@ -110,58 +151,112 @@ public class ManagerViewStocksFrame extends JFrame{
     }
   }
 
-  class UpdateListener implements ActionListener {
-    public void actionPerformed(ActionEvent e) {
-      /*
-       * First check if a stock of this name exists
-       */
-      String stockName = jtfUpdate.getText();
-      if (stockExists()) {
-        // open up update frame
-      } else {
-        String msg = "There does not exist a stock with the name "+
-        stockName + ".";
-        PopupFrame popup = new PopupFrame(msg);
-        popup.showWindow();
+  private JButton createUpdateButton() {
+    JButton jbtUpdateConfirm = new JButton("Confirm to Update");
+    jbtUpdateConfirm.addActionListener(e -> {
+      String stockName = jtfUpdateStock.getText();
+      String stockPriceStr = jtfUpdatePrice.getText();
+
+      try {
+        double parsedPrice = Double.parseDouble(stockPriceStr);
+        double stockPrice = cmInstance.convertToCurrencyForStorage(parsedPrice);
+
+        if (stockPrice <= 0) {
+          String msg = "Please enter a valid positive number to be the price of a stock";
+          JOptionPane.showMessageDialog(rootPane, msg);
+
+        } else {
+          if (manager.changeStockPrice(stockName, stockPrice)) {
+            String msg = "You've successfully updated the price of " +
+            stockName + " to be " + cmInstance.convertToCurrentCurrency(stockPrice);
+            JOptionPane.showMessageDialog(rootPane, msg);
+
+          } else {
+            String msg = "Please make sure you've correctly enter the name of the stock you want to update";
+            JOptionPane.showMessageDialog(rootPane, msg);
+          }
+        }
+
+      } catch (NumberFormatException err) {
+        String msg = "Please enter a valid positive number to be the price of a stock";
+        JOptionPane.showMessageDialog(rootPane, msg);
       }
-    }
+    });
+    return jbtUpdateConfirm;
   }
 
-  class DeleteListener implements ActionListener {
-    public void actionPerformed(ActionEvent e) {
-      // String stockName = jtfUpdate.getText();
-      // if (stockExists()) {
-      //   // open up update frame
-      // } else {
-      //   String msg = "There does not exist a stock with the name "+
-      //   stockName + ".";
-      //   PopupFrame popup = new PopupFrame(msg);
-      //   popup.showWindow();
-      // }
-    }
+  private JButton createDeleteButton() {
+    JButton jbtDeleteConfirm = new JButton("Confirm to Delete");
+    jbtDeleteConfirm.addActionListener(e -> {
+      String stockName = jtfDeleteStock.getText();
+      if (manager.changeStockStatus(stockName, false)) {
+        // we were able to "delete" the stock by setting the onsale
+        // status of the stock to be false
+        String msg = "The stock " + stockName + " has been deleted";
+        JOptionPane.showMessageDialog(rootPane, msg);
+      } else {
+        String msg = "Please make sure you've correctly enter the name of the stock you want to delete";
+        JOptionPane.showMessageDialog(rootPane, msg);
+      }
+    });
+    return jbtDeleteConfirm;
   }
 
-  class AddStockListener implements ActionListener {
-    public void actionPerformed(ActionEvent e) {
-      // String stockName = jtfUpdate.getText();
-      // if (stockExists()) {
-      //   // open up update frame
-      // } else {
-      //   String msg = "There does not exist a stock with the name "+
-      //   stockName + ".";
-      //   PopupFrame popup = new PopupFrame(msg);
-      //   popup.showWindow();
-      // }
-    }
+  private JButton createAddStockButton() {
+    JButton jbtAddStockConfirm = new JButton("Confirm to Add");
+    jbtAddStockConfirm.addActionListener(e -> {
+      String stockName = jtfAddStockName.getText();
+      String stockPriceStr = jtfAddStockPrice.getText();
+
+      try {
+        double parsedPrice = Double.parseDouble(stockPriceStr);
+        double stockPrice = cmInstance.convertToCurrencyForStorage(parsedPrice);
+
+        if (stockPrice <= 0) {
+          String msg = "Please enter a valid positive number to be the price of a stock";
+          JOptionPane.showMessageDialog(rootPane, msg);
+
+        } else {
+          /*
+           * 1.) either the stock already exists with an onsale status of
+           * false
+           * 2.) this is a new stock be added 
+           */
+          Stock stock = Read.getStock(stockName);
+          if (stock != null) {
+            manager.changeStockStatus(stockName, true);
+            manager.changeStockPrice(stockName, stockPrice);
+
+          } else {
+            manager.createStock(stockName, stockPriceStr);
+          }
+        }
+
+      } catch (NumberFormatException err) {
+        String msg = "Please enter a valid positive number to be the price of a stock";
+        JOptionPane.showMessageDialog(rootPane, msg);
+      }
+    });
+    return jbtAddStockConfirm;
   }
 
-  private boolean stockExists() {
-    return true;
+  public void stockUpdated() {
+    String msg = "There is an update to the stock market.";
+    regenerateFrame(msg);
+  }
+
+  private ManagerViewStocksFrame regenerateFrame(String msg) {
+    JOptionPane.showMessageDialog(rootPane, msg);
+    mwInstance.removeStockListener(this);
+    this.dispose();
+    ManagerViewStocksFrame mvsFrame = new ManagerViewStocksFrame();
+    mvsFrame.showWindow();
+    return mvsFrame;
   }
 
   public void showWindow() {
     // init frame info
-    this.setTitle( "View Stocks");
+    this.setTitle( "Manager View of Stocks");
     this.setSize( 1000, 600 );
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
     this.setLocationRelativeTo(null); // Center the frame on the screen

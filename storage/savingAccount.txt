@@ -1,10 +1,12 @@
 Gtl,179799.8,saving,false
-tcc,124.0,saving,false
 tonyc,124.0,saving,false
 Tony,124.0,saving,false
 tccc,123.0,saving,false
 tctc,123.0,saving,false
 tt,123.0,saving,false
 t1t,2.0,saving,false
-jiao,115.0,saving,false
-tony,125.98570000000001,saving,false
+tony,4242.3057,saving,false
+tcc,4112.99,saving,false
+jiao,45065.0,saving,false
+mat,0.0,saving,false
+matt,4111.99,saving,false

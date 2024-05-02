@@ -1,11 +1,19 @@
 package frontend;
 import javax.swing.*;
 
+import role.Manager;
+import utility.*;
+import role.*;
+
+import java.util.List;
+
 import java.awt.event.*;
 import java.awt.*;
 
 public class UserSelectionFrame extends JFrame{
-  public UserSelectionFrame() {
+  List<Customer> customers;
+  public UserSelectionFrame(List<Customer> customers) {
+    this.customers = customers;
     // create the buttons
     JButton jbtManager = new JButton("Manager");
     JButton jbtCustomer = new JButton("Customer");
@@ -22,19 +30,20 @@ public class UserSelectionFrame extends JFrame{
     // Associate events to each button action
     ManagerListener ml = new ManagerListener();
     jbtManager.addActionListener(ml);
-    CustomerListener cl = new CustomerListener();
+    AccountListener cl = new AccountListener();
     jbtCustomer.addActionListener(cl);
   }
 
   class ManagerListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      System.out.println("Manager button clicked");
+      ManagerFrame managerFrame = new ManagerFrame(Manager.get_manager());
+      managerFrame.showWindow();
     }
   }
 
-  class CustomerListener implements ActionListener {
+  class AccountListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      System.out.println("Customer button clicked");
+      // System.out.println("Customer button clicked");
       CustomerLoginFrame customerLoginFrame = new CustomerLoginFrame();
       customerLoginFrame.showWindow();
       // CustomerWindow customerWindow = new CustomerWindow();
@@ -42,9 +51,12 @@ public class UserSelectionFrame extends JFrame{
     }
   }
 
+  // need to start by passing in an entire list of customers, so 
+  // we won't recreate them and them lose reference
   public static void startGUI() {
     // create a new frame
-    JFrame userSelectionFrame = new UserSelectionFrame();
+    List<Customer> customers = Read.readUsers();
+    JFrame userSelectionFrame = new UserSelectionFrame(customers);
 
     // init frame info
     userSelectionFrame.setTitle( "User Selection" );
@@ -56,35 +68,3 @@ public class UserSelectionFrame extends JFrame{
     userSelectionFrame.setVisible(true);
   }
 }
-
-
-// import javax.swing.*;    
-// import java.awt.event.*;    
-// public class ComboBoxExample {    
-// JFrame f;    
-// ComboBoxExample(){    
-//     f=new JFrame("ComboBox Example");   
-//     final JLabel label = new JLabel();          
-//     label.setHorizontalAlignment(JLabel.CENTER);  
-//     label.setSize(400,100);  
-//     JButton b=new JButton("Show");  
-//     b.setBounds(200,100,75,20);  
-//     String languages[]={"C","C++","C#","Java","PHP"};        
-//     final JComboBox cb=new JComboBox(languages);    
-//     cb.setBounds(50, 100,90,20);    
-//     f.add(cb); f.add(label); f.add(b);    
-//     f.setLayout(null);    
-//     f.setSize(350,350);    
-//     f.setVisible(true);       
-//     b.addActionListener(new ActionListener() {  
-//         public void actionPerformed(ActionEvent e) {       
-// String data = "Programming language Selected: "   
-//    + cb.getItemAt(cb.getSelectedIndex());  
-// label.setText(data);  
-// }  
-// });           
-// }    
-// public static void main(String[] args) {    
-//     new ComboBoxExample();         
-// }    
-// }    

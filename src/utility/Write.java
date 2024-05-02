@@ -12,9 +12,18 @@ import transaction.Transaction;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 
 public class Write {
+    public static void writeTime(int currentTime) {
+        try (PrintWriter writer = new PrintWriter("storage/time.txt")) {
+            writer.print(currentTime);  // Using print() to avoid adding a newline character
+        } catch (IOException e) {
+            System.out.println("Exception: Unable to write to the file.");
+        }
+    }
+
     public static void writeUsers(List<Customer> customerList){
         try {
             BufferedWriter out = new BufferedWriter(new FileWriter("storage/user.txt", false));
@@ -166,5 +175,53 @@ public class Write {
             EntryList.add(entry);
         }
         writeStockHold(EntryList);
+    }
+    public static void writeStockPrice(Stock stock){
+        try {
+            BufferedWriter out = new BufferedWriter(new FileWriter("storage/stockHistoryPrice.txt", true));
+            out.write(stock.getName() + "," + stock.getPrice() + "\n");
+            out.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static void deleteSavingAccount(SavingAccount savingAccount){
+        List<SavingAccount> savingAccountList= Read.readSavingAccount();
+        for (int i = 0; i < savingAccountList.size(); i++) {
+            if (savingAccountList.get(i).getName().equals(savingAccount.getName())) {
+                savingAccountList.remove(i);
+                break;
+            }
+        }
+        writeSavingAccount(savingAccountList);
+    }
+    public static void deleteCheckingAccount(CheckingAccount checkingAccount) {
+        List<CheckingAccount> checkingAccountList= Read.readCheckingAccount();
+        for (int i = 0; i < checkingAccountList.size(); i++) {
+            if (checkingAccountList.get(i).getName().equals(checkingAccount.getName())) {
+                checkingAccountList.remove(i);
+                break;
+            }
+        }
+        writeCheckingAccount(checkingAccountList);
+    }
+    public static void deleteStockAccount(StockAccount stockAccount){
+        List<StockAccount> stockAccountList= Read.readStockAccount();
+        for (int i = 0; i < stockAccountList.size(); i++) {
+            if (stockAccountList.get(i).getName().equals(stockAccount.getName())) {
+                stockAccountList.remove(i);
+                break;
+            }
+        }
+        writeStockAccount(stockAccountList);
+        List<StockEntry> EntryList= Read.readStockHold();
+        for (int i = 0; i < EntryList.size(); i++) {
+            if (EntryList.get(i).getName().equals(stockAccount.getName())) {
+                EntryList.remove(i);
+                break;
+            }
+        }
+        writeStockHold(EntryList);
+
     }
 }

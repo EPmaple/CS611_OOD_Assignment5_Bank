@@ -10,7 +10,8 @@ import utility.*;
 import java.awt.event.*;
 import java.awt.*;
 
-public class CustomerFrame extends JFrame implements AccountListener, CurrencyModelListener{
+public class CustomerFrame extends JFrame implements BalanceListener, CurrencyModelListener, AccountListener{
+  private Middleware mwInstance = Middleware.getInstance();
   private CurrencyModel cmInstance = CurrencyModel.getInstance();
   private Customer customer;
   // private CheckingAccount checkingAccount;
@@ -21,17 +22,20 @@ public class CustomerFrame extends JFrame implements AccountListener, CurrencyMo
 
   // private JButton jbtCheckingAccount = new JButton();
   JPanel rightPanel = new JPanel(new GridLayout(5, 0));
-  // also grab the account info from middleware as well
+
+  JComboBox<String> jcbCurrencyOptions = cmInstance.createCurrencyComboBox();
 
   public CustomerFrame(Customer customer) {
     this.customer = customer;
     cmInstance.addCurrencyModelListener(this);
+    mwInstance.addBalanceListener(this);
+    mwInstance.addAccountListener(this);
     /*
      * If account info is null, or empty, then show create button, else take
      * the info and create another button that allows for viewing
      */
     // checking account button
-    if (customer.has_check_account()) {
+    if (customer.getCheckingAccount() != null) {
       // balanceUpdated(Constants.CHECKING);
       jbtCheckingAccount.setText("checking: " + cmInstance.convertToCurrentCurrency(customer.getCheckingAccount().getBalance()));
       CheckingAccountListener caListener = new CheckingAccountListener();
@@ -46,7 +50,7 @@ public class CustomerFrame extends JFrame implements AccountListener, CurrencyMo
     rightPanel.add(jbtCheckingAccount);
 
     // saving account button
-    if (customer.has_saving_account()) {
+    if (customer.getSavingAccount() != null) {
       // balanceUpdated(Constants.SAVING);
       jbtSavingAccount.setText("saving: " + cmInstance.convertToCurrentCurrency(customer.getSavingAccount().getBalance()));
       // create a saving account listener
@@ -62,8 +66,10 @@ public class CustomerFrame extends JFrame implements AccountListener, CurrencyMo
     rightPanel.add(jbtSavingAccount);
 
     // stocking account
-    if (customer.has_stock_account()) {
-      jbtStockingAccount.setText("saving: " + cmInstance.convertToCurrentCurrency(customer.getStockAccount().getBalance()));
+    if (customer.getStockAccount() != null) {
+      // customer.getStockAccount().addAccountListener(this);
+      jbtStockingAccount.setText("securities: " + cmInstance.convertToCurrentCurrency(customer.getStockAccount().getBalance()) +
+      " (Enter stock trade)");
       StockingAccountListener stockAListener = new StockingAccountListener();
       jbtStockingAccount.addActionListener(stockAListener);
 
@@ -74,23 +80,44 @@ public class CustomerFrame extends JFrame implements AccountListener, CurrencyMo
       rightPanel.add(jlbStockingAccount);
 
     }
-    
 
-    JButton jbtRequestLoan = new JButton("Request Loan");
-    JButton jbtViewTransaction = new JButton("View Transaction");
-    // JButton 
-    JLabel jlbUsername = new JLabel(customer.get_name());
-    JLabel jlbEmpty = new JLabel();
+
+    jcbCurrencyOptions.addActionListener(new ChangeCurrencyListener());
+
     JLabel jlbMessage = new JLabel("Select your transaction");
 
     JPanel leftPanel = new JPanel();
-    leftPanel.setLayout(new GridLayout(3, 0));
-    leftPanel.add(jlbUsername);
-    leftPanel.add(jlbEmpty);
+    leftPanel.setLayout(new GridLayout(2, 0));
+    leftPanel.add(jcbCurrencyOptions);
     leftPanel.add(jlbMessage);
 
-    rightPanel.add(jbtRequestLoan);
-    rightPanel.add(jbtViewTransaction);
+    if (customer.get_has_loan()) {
+      JButton jbtPayLoan = new JButton("Pay Loan (via checking)");
+      jbtPayLoan.addActionListener(e -> {
+        PayLoanFrame plFrame = new PayLoanFrame(customer);
+        plFrame.showWindow();
+      });
+      rightPanel.add(jbtPayLoan);
+
+    } else {
+      JButton jbtRequestLoan = new JButton("Request Loan");
+      jbtRequestLoan.addActionListener(e -> {
+        RequestLoanFrame rlFrame = new RequestLoanFrame(customer);
+        rlFrame.showWindow();
+        
+      });
+      rightPanel.add(jbtRequestLoan);
+    }
+
+    if (customer.has_check_account() || customer.has_saving_account() || customer.has_stock_account()) {
+      JButton jbtViewTransaction = new JButton("View Transaction");
+      rightPanel.add(jbtViewTransaction);
+      jbtViewTransaction.addActionListener(new ViewTransactionListener());
+
+    } else {
+      JLabel jlbViewTxn = new JLabel("You have yet to make any transactions");
+      rightPanel.add(jlbViewTxn);
+    }
 
     JPanel mainPanel = new JPanel();
     mainPanel.setLayout(new GridLayout(0, 2));
@@ -99,11 +126,18 @@ public class CustomerFrame extends JFrame implements AccountListener, CurrencyMo
 
     add(mainPanel);
 
-    jbtRequestLoan.addActionListener(new RequestLoanListener());
-    jbtViewTransaction.addActionListener(new ViewTransactionListener());
+  }
 
-    // open up a window that allows for deposit, transfer, withdraw,
-    // jbtCheckingAccount.addActionListener(...);
+
+
+  class ChangeCurrencyListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      String selectedCurrency = jcbCurrencyOptions.getItemAt(jcbCurrencyOptions.getSelectedIndex());
+
+      if (!selectedCurrency.equals(cmInstance.getCurrentCurrency())) {
+        cmInstance.setCurrentCurrency(selectedCurrency);
+      }
+    }
   }
 
   class CreateCheckingAccountListener implements ActionListener {
@@ -118,7 +152,7 @@ public class CustomerFrame extends JFrame implements AccountListener, CurrencyMo
 
   class CheckingAccountListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      BankingAccountFrame baFrame = new BankingAccountFrame(CustomerFrame.this, customer, Constants.CHECKING);
+      BankingAccountFrame baFrame = new BankingAccountFrame(customer, Constants.CHECKING);
       baFrame.showWindow();
     }
   }
@@ -135,55 +169,43 @@ public class CustomerFrame extends JFrame implements AccountListener, CurrencyMo
 
   class SavingAccountListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      BankingAccountFrame baFrame = new BankingAccountFrame(CustomerFrame.this, customer, Constants.SAVING);
-      baFrame.showWindow();
+      SavingAccountFrame saFrame = new SavingAccountFrame(customer);
+      saFrame.showWindow();
     }
   }
 
   class StockingAccountListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      // ...
-    }
-  }
-
-  class RequestLoanListener implements ActionListener {
-    public void actionPerformed(ActionEvent e) {
-      // specifics are yet to be implemented
-      RequestLoanFrame requestLoanFrame = new RequestLoanFrame();
-      requestLoanFrame.showWindow();
+      CustomerViewStocksFrame cvsFrame = new CustomerViewStocksFrame(customer);
+      cvsFrame.showWindow();
     }
   }
 
   class ViewTransactionListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      CustomerViewTransactionFrame txnFrame = new CustomerViewTransactionFrame();
+      CustomerViewTransactionFrame txnFrame = new CustomerViewTransactionFrame(customer);
       txnFrame.showWindow();
     }
   }
 
-  @Override
-  public void balanceUpdated(String accountType) {
-    if (accountType.equals(Constants.CHECKING)) {
-      String msg = "There is a balance update to your " + accountType + " account";
+  public void balanceUpdated(String customerName) {
+    if (customerName.equals(customer.get_name())) {
+      String msg = "There is a balance update to one of your accounts";
       regenerateFrame(msg);
+    }
+  }
 
-    } else if (accountType.equals(Constants.SAVING)) {
-      String msg = "There is a balance update to your " + accountType + " account";
+  public void accountUpdated(String customerName) {
+    if (customerName.equals(customer.get_name())) {
+      String msg = "There is an account update to one of your accounts";
       regenerateFrame(msg);
-
-    } else if (accountType.equals(Constants.STOCKING)) {
-
-
-    } else {
-      System.out.println("The account type in balanceUpdate() is: " + 
-      accountType + ", which is not supported.");
     }
   }
 
   public void showWindow() {
     // init frame info
     this.setTitle( "Customer: " + customer.get_name() );
-    this.setSize( 500, 300 );
+    this.setSize( 800, 350 );
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
     this.setLocationRelativeTo(null); // Center the frame on the screen
 
@@ -193,6 +215,9 @@ public class CustomerFrame extends JFrame implements AccountListener, CurrencyMo
 
   public CustomerFrame regenerateFrame(String msg) {
     JOptionPane.showMessageDialog(rootPane, msg);
+    cmInstance.removeCurrencyModelListener(this);
+    mwInstance.removeBalanceListener(this);
+    mwInstance.removeAccountListener(this);
     this.dispose();
     CustomerFrame customerFrame = new CustomerFrame(customer);
     customerFrame.showWindow();

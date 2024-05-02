@@ -10,7 +10,12 @@ import utility.Write;
 
 import java.util.List;
 
+import frontend.Middleware;
+import frontend.TimeModel;
+
 public class StockAccount extends Account {
+    private Middleware mwInstance = Middleware.getInstance();
+    private TimeModel tmInstance = TimeModel.getInstance();
     private String name;
     private double balance=0;
     private String type;
@@ -54,7 +59,8 @@ public class StockAccount extends Account {
     public void transferIn(double amount){
         this.balance+=amount;
         Write.rewriteStockAccount(this);
-        Write.writeTransaction(new Transaction(name,type,"transferIn",String.valueOf(amount),"0"));
+        String time = tmInstance.getTime() + "";
+        Write.writeTransaction(new Transaction(name,type,"transferIn",String.valueOf(amount),time));
     }
     public boolean transferOut(double amount){
         if(balance<amount* (1.0+Account.transfer_rate)){
@@ -62,7 +68,8 @@ public class StockAccount extends Account {
         }
         this.balance-=amount* (1.0+Account.transfer_rate);
         Write.rewriteStockAccount(this);
-        Write.writeTransaction(new Transaction(name,type,"transferOut",String.valueOf(amount* (1.0+Account.transfer_rate)),"0"));
+        String time = tmInstance.getTime() + "";
+        Write.writeTransaction(new Transaction(name,type,"transferOut",String.valueOf(amount* (1.0+Account.transfer_rate)),time));
         return true;
     }
     public boolean buyStock(String stockName,int number){
@@ -93,12 +100,14 @@ public class StockAccount extends Account {
         }else{
             entry.setNumber(entry.getNumber()+number);
         }
-        Write.writeStockTransaction(new Stock_Transaction(name,stockName,"buy",String.valueOf(number),String.valueOf(number*stock.getPrice()),"0"));
+        String time = tmInstance.getTime() + "";
+        Write.writeStockTransaction(new Stock_Transaction(name,stockName,"buy",String.valueOf(number),String.valueOf(number*stock.getPrice()),time));
         this.balance-=number*stock.getPrice();
         Write.rewriteStockAccount(this);
         Write.rewriteStockHold(entry);
         this.updateHoldList();
         this.updateTransactionList();
+        mwInstance.notifyBalanceUpdated(this.name);
         return true;
     }
     public boolean sellStock(String stockName,int number){
@@ -130,12 +139,31 @@ public class StockAccount extends Account {
         }else{
             actual = number;
         }
-        Write.writeStockTransaction(new Stock_Transaction(name,stockName,"sale",String.valueOf(actual),String.valueOf(actual*stock.getPrice()),"0"));
+        String time = tmInstance.getTime() + "";
+        Write.writeStockTransaction(new Stock_Transaction(name,stockName,"sale",String.valueOf(actual),String.valueOf(actual*stock.getPrice()),time));
         this.balance+=actual*stock.getPrice();
         Write.rewriteStockAccount(this);
         Write.rewriteStockHold(entry);
         this.updateHoldList();
         this.updateTransactionList();
+        mwInstance.notifyBalanceUpdated(this.name);
         return true;
     }
+    public double getProfitGet(){
+        List<Stock_Transaction> list = Read.getHistoryStockTransactionAccount(name);
+        double profit = 0;
+        for(int i = 0;i<list.size();i++){
+            if(list.get(i).getType().equals("sale")){
+                profit+= Double.parseDouble(list.get(i).getCost());
+            }else{
+                profit-= Double.parseDouble(list.get(i).getCost());
+            }
+        }
+        return profit;
+    }
+    public void deleteAccount(){
+        Write.deleteStockAccount(this);
+    }
 }
+
+

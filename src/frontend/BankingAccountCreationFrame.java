@@ -69,7 +69,6 @@ public class BankingAccountCreationFrame extends JFrame{
 
       // register the parent frame as a subject for notificaiton
       CheckingAccount checkingAccount = customer.getCheckingAccount();
-      checkingAccount.addAccountListener(parentFrame);
 
       // then we make the deposit, and notifyBalanceUpdated will work
       // as intended with its list of listeners
@@ -85,7 +84,6 @@ public class BankingAccountCreationFrame extends JFrame{
 
       // register the parent frame as a subject for notificaiton
       SavingAccount savingAccount = customer.getSavingAccount();
-      savingAccount.addAccountListener(parentFrame);
 
       // then we make the deposit, and notifyBalanceUpdated will work
       // as intended with its list of listeners

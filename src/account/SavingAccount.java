@@ -7,26 +7,12 @@ import utility.Write;
 import java.util.ArrayList;
 import java.util.List;
 
+import frontend.Middleware;
+import frontend.TimeModel;
+
 public class SavingAccount extends Account{
-    private List<AccountListener> listeners = new ArrayList<AccountListener>();
-
-    public void addAccountListener(AccountListener listener) {
-        // System.out.println("listener added: " + listener);
-        listeners.add(listener);
-    }
-
-    public void removeAccountListener(AccountListener listener) {
-        listeners.remove(listener);
-    }
-
-    private void notifyBalanceUpdated() {
-        // System.out.println("Is there any listeners?");
-        for (AccountListener listener : listeners) {
-            // System.out.println(listener.toString());
-            listener.balanceUpdated(this.type);
-        }
-    }
-
+    private Middleware mwInstance = Middleware.getInstance();
+    private TimeModel tmInstance = TimeModel.getInstance();
     // ***************************************
 
     private String name;
@@ -60,6 +46,7 @@ public class SavingAccount extends Account{
     }
 
     public List<Transaction> getTransactionList() {
+        this.updateTransactionList();
         return transactionList;
     }
 
@@ -81,8 +68,9 @@ public class SavingAccount extends Account{
     public void transferIn(double amount){
         this.balance+=amount;
         Write.rewriteSavingAccount(this);
-        Write.writeTransaction(new Transaction(name,type,"transferIn",String.valueOf(amount),"0"));
-        notifyBalanceUpdated();
+        String time = tmInstance.getTime() + "";
+        Write.writeTransaction(new Transaction(name,type,"transferIn",String.valueOf(amount),time));
+        mwInstance.notifyBalanceUpdated(this.name);
     }
     public boolean transferOut(double amount){
         if(balance<amount* (1.0+Account.transfer_rate)){
@@ -95,8 +83,17 @@ public class SavingAccount extends Account{
         }
         this.balance-=amount* (1.0+Account.transfer_rate);
         Write.rewriteSavingAccount(this);
-        Write.writeTransaction(new Transaction(name,type,"transferOut",String.valueOf(amount* (1.0+Account.transfer_rate)),"0"));
-        notifyBalanceUpdated();
+        String time = tmInstance.getTime() + "";
+        Write.writeTransaction(new Transaction(name,type,"transferOut",String.valueOf(amount* (1.0+Account.transfer_rate)),time));
+        mwInstance.notifyBalanceUpdated(this.name);
         return true;
+    }
+
+    public void addInterest(){
+        this.balance+=this.balance*Account.interest_rate;
+        Write.rewriteSavingAccount(this);
+    }
+    public void deleteAccount(){
+        Write.deleteSavingAccount(this);
     }
 }

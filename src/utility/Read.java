@@ -16,6 +16,25 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Read {
+    public static int readTime() {
+        File timeFile = new File("storage/time.txt");
+        if (!timeFile.exists()) {
+            return 0;  // Default to 0 if the file doesn't exist
+        }
+        
+        try (Scanner timeReader = new Scanner(timeFile)) {
+            if (timeReader.hasNextInt()) {
+                return timeReader.nextInt();
+            } else {
+                return 0;  // Default to 0 if the file is empty or contains non-integer data
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Exception: File Not Found.");
+            return 0;
+        }
+    }
+    
+
     public static List<Customer> readUsers() {
         try {
             File userFile = new File("storage/user.txt");
@@ -33,6 +52,16 @@ public class Read {
             System.out.println("Exception: File Not Found.");
         }
         return new ArrayList<Customer>();
+    }
+    public static Customer getCustomerFromCustomers(List<Customer> customers, String name) {
+        Customer re;
+        for (int i = 0; i < customers.size(); i++) {
+            if (customers.get(i).get_name().equals(name)) {
+                re = customers.get(i);
+                return re;
+            }
+        }
+        return null; 
     }
     public static Customer get_customer(String name){
         List<Customer> customerList = readUsers();
@@ -261,6 +290,34 @@ public class Read {
         for (int i = 0; i <EntryList.size(); i++) {
             if (EntryList.get(i).getStockName().equals(stockName)) {
                 result.add(EntryList.get(i));
+            }
+        }
+        return result;
+    }
+    public static List<Stock> readStockHistoryPrice(){
+        try {
+            File userFile = new File("storage/stockHistoryPrice.txt");
+            Scanner Reader = new Scanner(userFile);
+            List<Stock>  EntrtList = new ArrayList<Stock>();
+            while (Reader.hasNextLine()) {
+                String userLine = Reader.nextLine();
+                String[] splits = userLine.split(",");
+                Stock entry = new Stock(splits[0], splits[1],"true");
+                EntrtList.add(entry);
+            }
+            Reader.close();
+            return EntrtList;
+        } catch (FileNotFoundException e) {
+            System.out.println("Exception: File Not Found.");
+        }
+        return new ArrayList<Stock>();
+    }
+    public static List<Double> getStockHistoryPrice(String stockName){
+        List<Stock> EntryList = readStockHistoryPrice();
+        List<Double> result = new ArrayList<Double>();
+        for (int i = 0; i <EntryList.size(); i++) {
+            if (EntryList.get(i).getName().equals(stockName)) {
+                result.add(EntryList.get(i).getPrice());
             }
         }
         return result;

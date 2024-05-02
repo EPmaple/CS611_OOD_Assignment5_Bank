@@ -1,6 +1,8 @@
 package role;
 import java.util.ArrayList;
 import java.util.List;
+
+import frontend.Middleware;
 import stock.Market;
 import stock.Stock;
 import transaction.Stock_Transaction;
@@ -9,6 +11,7 @@ import utility.Read;
 import utility.Write;
 
 public class Manager extends User {
+    private Middleware mwInstance = Middleware.getInstance();
     private static Manager manager;
     private final String password;
     private Manager(String name,String password){
@@ -31,14 +34,16 @@ public class Manager extends User {
     public boolean createStock(String stockName,String price){
         Stock stock = new Stock(stockName,price,"true");
         Write.rewriteStock(stock);
+        mwInstance.notifyStockUpdated();
         return true;
     }
-    public boolean changeStockPrice(String stockName,String price){
+    public boolean changeStockPrice(String stockName,double price){
         Stock stock = Market.getInstance().getStock(stockName);
         if(stock == null){
             return false;
         }
-        stock.setPrice(Double.parseDouble(price));
+        stock.setPrice(price);
+        mwInstance.notifyStockUpdated();
         return true;
     }
     public boolean changeStockStatus(String stockName,boolean status){
@@ -47,6 +52,7 @@ public class Manager extends User {
             return false;
         }
         stock.setOnSale(status);
+        mwInstance.notifyStockUpdated();
         return true;
     }
     public List<Customer> getCustomerWithLoan(){
@@ -88,5 +94,13 @@ public class Manager extends User {
             }
         }
         return re;
+    }
+    public void addInterest(){
+        List<Customer> customers = Read.readUsers();
+        for(int i = 0;i<customers.size();i++){
+            if(customers.get(i).has_saving_account()){
+                customers.get(i).getSavingAccount().addInterest();
+            }
+        }
     }
 }
