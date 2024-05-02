@@ -13,25 +13,22 @@ import java.awt.*;
 import java.util.List;
 import java.util.ArrayList;
 
-public class BankingAccountFrame extends JFrame implements AccountListener, CurrencyModelListener{
+public class SavingAccountFrame extends JFrame implements AccountListener, CurrencyModelListener{
   private Middleware mwInstance = Middleware.getInstance();
-  CurrencyModel cmInstance = CurrencyModel.getInstance();
+  private CurrencyModel cmInstance = CurrencyModel.getInstance();
   JTextField jtfDeposit = new JTextField();
   JTextField jtfWithdraw = new JTextField();
 
   Customer customer;
-  String accountType;
-  // CheckingAccount currentAccount;
   JComboBox<String> jcbOptions;
   JTextField jtfTransfer = new JTextField();
   JLabel jlbBalance = new JLabel();
   JComboBox<String> jcbCurrencyOptions = cmInstance.createCurrencyComboBox();
 
-  public BankingAccountFrame(Customer customer, String accountType) {
+  public SavingAccountFrame(Customer customer) {
     mwInstance.addAccountListener(this);
     cmInstance.addCurrencyModelListener(this);
     this.customer = customer;
-    this.accountType = accountType;
 
     JLabel jlbDeposit = new JLabel("Enter amount to deposit: " +
     cmInstance.getCurrentCurrency());
@@ -114,22 +111,11 @@ public class BankingAccountFrame extends JFrame implements AccountListener, Curr
           JOptionPane.showMessageDialog(rootPane, msg);
         } else {
 
-          if (accountType.equals(Constants.CHECKING)) {
-            CheckingAccount checkingAccount = customer.getCheckingAccount();
-            checkingAccount.transferIn(depositInDollar);
-            String msg = "There is an update to your " + accountType + " account";
-            // parentFrame = parentFrame.regenerateFrame(msg);
-            regenerateFrame(msg);
-            
-
-          } else if (accountType.equals(Constants.SAVING)) {
-            SavingAccount savingAccount = customer.getSavingAccount();
-            savingAccount.transferIn(depositInDollar);
-            String msg = "There is an update to your " + accountType + " account";
-            // parentFrame = parentFrame.regenerateFrame(msg);
-            regenerateFrame(msg);
-
-          }
+          SavingAccount savingAccount = customer.getSavingAccount();
+          savingAccount.transferIn(depositInDollar);
+          String msg = "There is an update to your " + customer.getSavingAccount().getType() + " account";
+          // parentFrame = parentFrame.regenerateFrame(msg);
+          regenerateFrame(msg);
         }
 
       } catch (NumberFormatException err) {
@@ -150,21 +136,11 @@ public class BankingAccountFrame extends JFrame implements AccountListener, Curr
           JOptionPane.showMessageDialog(rootPane, msg);
         } else {
 
-          if (accountType.equals(Constants.CHECKING)) {
-            CheckingAccount checkingAccount = customer.getCheckingAccount();
-            checkingAccount.transferOut(withdrawInDollar);
-            String msg = "There is an update to your " + accountType + " account";
-            // parentFrame = parentFrame.regenerateFrame(msg);
-            regenerateFrame(msg);
-
-          } else if (accountType.equals(Constants.SAVING)) {
-            SavingAccount savingAccount = customer.getSavingAccount();
-            savingAccount.transferOut(withdrawInDollar);
-            String msg = "There is an update to your " + accountType + " account";
-            // parentFrame = parentFrame.regenerateFrame(msg);
-            regenerateFrame(msg);
-
-          }
+          SavingAccount savingAccount = customer.getSavingAccount();
+          savingAccount.transferOut(withdrawInDollar);
+          String msg = "There is an update to your " + customer.getSavingAccount().getType() + " account";
+          // parentFrame = parentFrame.regenerateFrame(msg);
+          regenerateFrame(msg);
         }
 
       } catch (NumberFormatException err) {
@@ -180,57 +156,46 @@ public class BankingAccountFrame extends JFrame implements AccountListener, Curr
         double transferAmt = Double.parseDouble(jtfTransfer.getText());
         double transferInDollar = cmInstance.convertToCurrencyForStorage(transferAmt);
 
-        if (transferAmt < 0) {
-          String msg = "To withdraw, please enter a valid positive number";
+        SavingAccount savingAccount = customer.getSavingAccount();
+        double saBalance = savingAccount.getBalance();
+
+        if (transferInDollar < 0) {
+          String msg = "To transfer, please enter a valid positive number";
           JOptionPane.showMessageDialog(rootPane, msg);
+
+        } else if (transferInDollar > saBalance) {
+          String msg = "The amount you are attempting to transfer is greater "+
+          "than the account balance";
+          JOptionPane.showMessageDialog(rootPane, msg);
+
+        } else if (saBalance - transferInDollar < 2500) {
+          String msg = "You must maintain a " + cmInstance.convertToCurrentCurrency(2500) + 
+          " balance in your saving account";
+          JOptionPane.showMessageDialog(rootPane, msg);
+          
         } else {
-
-          if (accountType.equals(Constants.CHECKING)) {
-            CheckingAccount checkingAccount = customer.getCheckingAccount();
-            double caBalance = checkingAccount.getBalance();
-
-            if (transferInDollar > caBalance) {
-              String msg = "To withdraw, please enter a valid positive number";
+          String option = jcbOptions.getItemAt(jcbOptions.getSelectedIndex());
+          // if we are transferring to a new stockAccount
+          if (!customer.has_stock_account() && option.equals(Constants.STOCKING)) {
+            if (transferInDollar < 1000) {
+              String msg = "To create a new securities account, the first "+
+              "transfer must be greater than " + cmInstance.convertToCurrentCurrency(1000);
               JOptionPane.showMessageDialog(rootPane, msg);
-            } else {
-              checkingAccount.transferOut(transferInDollar);
-              String option = jcbOptions.getItemAt(jcbOptions.getSelectedIndex());
 
-              if (option.equals(Constants.SAVING)) {
-                customer.getSavingAccount().transferIn(transferInDollar);
-
-              } else if (option.equals(Constants.STOCKING)) {
-                customer.getStockAccount().transferIn(transferInDollar);
-              }
-
-              String msg = "There is an update to your " + accountType + " account";
-              // parentFrame = parentFrame.regenerateFrame(msg);
-              regenerateFrame(msg);
+            } else { // we create the account, which does the account
+              // creation, transferOut of Saving, tranferIn of Stock
+              customer.createStockingAccount(transferInDollar);
             }
 
-          } else if (accountType.equals(Constants.SAVING)) {
-            SavingAccount savingAccount = customer.getSavingAccount();
-            double saBalance = savingAccount.getBalance();
+          } else { // then we can go on to make the transfer
+            savingAccount.transferOut(transferInDollar);
 
-            if (transferInDollar > saBalance) {
-              String msg = "To withdraw, please enter a valid positive number";
-              JOptionPane.showMessageDialog(rootPane, msg);
-            } else {
-              savingAccount.transferOut(transferInDollar);
-              String option = jcbOptions.getItemAt(jcbOptions.getSelectedIndex());
+            if (option.equals(Constants.CHECKING)) {
+              customer.getCheckingAccount().transferIn(transferInDollar);
 
-              if (option.equals(Constants.CHECKING)) {
-                customer.getCheckingAccount().transferIn(transferInDollar);
-
-              } else if (option.equals(Constants.STOCKING)) {
-                customer.getStockAccount().transferIn(transferInDollar);
-              }
-
-              String msg = "There is an update to your " + accountType + " account";
-              // parentFrame = parentFrame.regenerateFrame(msg);
-              regenerateFrame(msg);
+            } else if (option.equals(Constants.STOCKING)) {
+              customer.getStockAccount().transferIn(transferInDollar);
             }
-
           }
         }
 
@@ -244,41 +209,20 @@ public class BankingAccountFrame extends JFrame implements AccountListener, Curr
 
   private String[] getAvailableAccountsForTransfer() {
     List<String> options = new ArrayList<String>();
-    if (accountType.equals(Constants.CHECKING)) {
-      CheckingAccount checkingAccount = customer.getCheckingAccount();
-      double balance = checkingAccount.getBalance();
-      jlbBalance.setText("Current balance: " + cmInstance.convertToCurrentCurrency(balance));
-      
-      if (customer.has_saving_account()) {
-        options.add(Constants.SAVING);
-      }
 
-      if (customer.has_stock_account()) {
-        options.add(Constants.STOCKING);
-      }
+    SavingAccount savingAccount = customer.getSavingAccount();
+    // this balance when first acquired is always DOLLAR
+    double balance = savingAccount.getBalance();
+    jlbBalance.setText("Current balance: " + cmInstance.convertToCurrentCurrency(balance));
 
-    } else if (accountType.equals(Constants.SAVING)) {
-      SavingAccount savingAccount = customer.getSavingAccount();
-      double balance = savingAccount.getBalance();
-      jlbBalance.setText("Current balance: " + cmInstance.convertToCurrentCurrency(balance));
+    if (customer.has_check_account()) {
+      options.add(Constants.CHECKING);
+    }
 
-      if (customer.has_check_account()) {
-        options.add(Constants.CHECKING);
-      }
-
-      if (customer.has_stock_account()) {
-        options.add(Constants.STOCKING);
-      }
-
-    } else if (accountType.equals(Constants.STOCKING)) {
-      if (customer.has_check_account()) {
-        options.add(Constants.CHECKING);
-      }
-
-      if (customer.has_saving_account()) {
-        options.add(Constants.SAVING);
-      }
-
+    if (customer.has_stock_account()) {
+      options.add(Constants.STOCKING);
+    } else if (balance > 5000) {
+      options.add(Constants.STOCKING);
     }
 
     // convert ArrayList of Strings to an Array
@@ -290,7 +234,7 @@ public class BankingAccountFrame extends JFrame implements AccountListener, Curr
   public void showWindow() {
     // init frame info
     this.setTitle( "Customer: " + customer.get_name() + "'s " +
-    accountType + " account");
+    customer.getSavingAccount().getType() + " account");
     this.setSize( 750, 400 );
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
     this.setLocationRelativeTo(null); // Center the frame on the screen
@@ -306,13 +250,14 @@ public class BankingAccountFrame extends JFrame implements AccountListener, Curr
     regenerateFrame(msg);
   }
 
-  private void regenerateFrame(String msg) {
+  private SavingAccountFrame regenerateFrame(String msg) {
     JOptionPane.showMessageDialog(rootPane, msg);
     mwInstance.removeAccountListener(this);
     cmInstance.removeCurrencyModelListener(this);
     this.dispose();
-    BankingAccountFrame bankingAccountFrame = new BankingAccountFrame(customer, accountType);
-    bankingAccountFrame.showWindow();
+    SavingAccountFrame saFrame = new SavingAccountFrame(customer);
+    saFrame.showWindow();
+    return saFrame;
   }
 
   public void currencyUpdate() {

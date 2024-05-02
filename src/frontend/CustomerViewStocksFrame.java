@@ -1,85 +1,351 @@
 package frontend;
 
 import javax.swing.*;
+
+import account.BalanceListener;
+import account.SavingAccount;
+import account.StockAccount;
+
 import java.awt.event.*;
+import java.text.DecimalFormat;
 import java.awt.*;
 
-public class CustomerViewStocksFrame extends JFrame{
-  private JLabel jlbSecuritiesBalance = new JLabel();
-  private JTextField jtfName = new JTextField("Stock name");
-  private JTextField jtfNumShares = new JTextField("Number of shares");
+import role.Customer;
+import utility.Constants;
+import utility.Read;
+import stock.Stock;
+import stock.StockEntry;
+import stock.StockListener;
+import transaction.Transaction;
 
-  public CustomerViewStocksFrame() {
-    jlbSecuritiesBalance.setText("Securities account currently has $xx.");
+import java.util.ArrayList;
+import java.util.List;
+
+public class CustomerViewStocksFrame extends JFrame implements BalanceListener, CurrencyModelListener, StockListener{
+  private CurrencyModel cmInstance = CurrencyModel.getInstance();
+  private Middleware mwInstance = Middleware.getInstance();
+  private Customer customer;
+
+  private CardLayout cardLayout = new CardLayout();
+  private JPanel cardPanel = new JPanel(cardLayout);
+
+  public CustomerViewStocksFrame(Customer customer) {
+    this.customer = customer;
+    mwInstance.addBalanceListener(this);
+    cmInstance.addCurrencyModelListener(this);
+    mwInstance.addStockListener(this);
+
+    // ***************************
+
+    JButton jbtBuyStocks = new JButton("Buy Stocks");
+    jbtBuyStocks.addActionListener(e -> {
+      cardLayout.show(cardPanel, "Buy Stocks");
+    });
+    JButton jbtSellStocks = new JButton("Sell Stocks");
+    jbtSellStocks.addActionListener(e -> {
+      cardLayout.show(cardPanel, "Sell Stocks");
+    });
+    JButton jbtToTransfer = new JButton("To Transfer");
+    jbtToTransfer.addActionListener(e -> {
+      cardLayout.show(cardPanel, "To Transfer");
+    });
+    JPanel buttonPanel = new JPanel();
+    buttonPanel.add(jbtBuyStocks);
+    buttonPanel.add(jbtSellStocks);
+    buttonPanel.add(jbtToTransfer);
+
+    add(buttonPanel, BorderLayout.NORTH);
+    add(cardPanel, BorderLayout.CENTER);
+
+    createPanelsForTrade();
+
+    // ***************************
+  }
+
+  private void createPanelsForTrade() {
+    createBuyPanel();
+    createSellPanel();
+    createTransferPanel();
+  }
+
+    private String[] getAvailableAccountsForTransfer() {
+    List<String> options = new ArrayList<String>();
+
+    StockAccount stockAccount = customer.getStockAccount();
+    // this balance when first acquired is always DOLLAR
+    double balance = stockAccount.getBalance();
+
+    if (customer.has_check_account()) {
+      options.add(Constants.CHECKING);
+    }
+
+    if (customer.has_saving_account()) {
+      options.add(Constants.SAVING);
+    } 
+
+    return options.toArray(new String[0]);
+  }
+
+  private void createTransferPanel() {
+    JLabel jlbSecuritiesBalance = new JLabel("Securities account currently has "+
+    cmInstance.convertToCurrentCurrency(customer.getStockAccount().getBalance()));
+    JLabel jlbMsg = new JLabel("Select the account you would like to "+
+    "transfer to, and enter the amount you would like to transfer:");
+    JTextField jtfTransfer = new JTextField("Enter amt to transfer");
+    JComboBox<String> jcbOptions = new JComboBox<String>(getAvailableAccountsForTransfer());
+    JButton jbtTransfer = new JButton("Confirm to Transfer");
+
+    JPanel msgPanel = new JPanel(new GridLayout(2, 0));
+    msgPanel.add(jlbSecuritiesBalance);
+    msgPanel.add(jlbMsg);
+
+    JPanel bodyPanel = new JPanel();
+    bodyPanel.add(jcbOptions);
+    bodyPanel.add(jtfTransfer);
+    bodyPanel.add(jbtTransfer);
+
+    JPanel transferPanel = new JPanel(new BorderLayout());
+    transferPanel.add(msgPanel, BorderLayout.NORTH);
+    transferPanel.add(bodyPanel, BorderLayout.CENTER);
+
+    cardPanel.add(transferPanel, "To Transfer");
+
+    jbtTransfer.addActionListener(e -> {
+      try {
+        double transferAmt = Double.parseDouble(jtfTransfer.getText());
+        double transferInDollar = cmInstance.convertToCurrencyForStorage(transferAmt);
+        StockAccount stockAccount = customer.getStockAccount();
+        double saBalance = stockAccount.getBalance();
+
+        if (transferInDollar < 0) {
+          String msg = "To transfer, please enter a valid positive number";
+          JOptionPane.showMessageDialog(rootPane, msg);
+
+        } else if (transferInDollar > saBalance) {
+          String msg = "The amount you are attempting to transfer is greater "+
+          "than the account balance";
+          JOptionPane.showMessageDialog(rootPane, msg);
+
+        } else {
+          String option = jcbOptions.getItemAt(jcbOptions.getSelectedIndex());
+          stockAccount.transferOut(transferInDollar);
+          if (option.equals(Constants.CHECKING)) {
+            customer.getCheckingAccount().transferIn(transferInDollar);
+
+          } else if (option.equals(Constants.SAVING)) {
+            customer.getSavingAccount().transferIn(transferInDollar);
+          }
+        }
+      } catch (NumberFormatException err) {
+        String msg = "To transfer, please enter a valid positive number";
+        JOptionPane.showMessageDialog(rootPane, msg);
+      }
+    });
+  }
+
+  private void createSellPanel() {
+    JLabel jlbSecuritiesBalance = new JLabel("Securities account currently has "+
+    cmInstance.convertToCurrentCurrency(customer.getStockAccount().getBalance()));
+    JTextField jtfName = new JTextField("Stock name");
+    JTextField jtfNumShares = new JTextField("Number of shares");
+
+    JLabel jlbSell = new JLabel("Enter name of the stock to sell, and the number of shares to sell.");
+
+    JButton jbtSell = new JButton("Confirm to sell");
+    JPanel sellActionPanel = new JPanel(new GridLayout(0, 3));
+    sellActionPanel.add(jtfName);
+    sellActionPanel.add(jtfNumShares);
+    sellActionPanel.add(jbtSell);
+
+    JPanel header = new JPanel(new GridLayout(3, 0));
+    header.add(jlbSecuritiesBalance);
+    header.add(jlbSell);
+    header.add(sellActionPanel);
+
+    String columnHeaders[] = {"Stock Name", "Current Price", "Num of Shares"};
+
+    JTable jt = new JTable(convertHoldsToData(), columnHeaders);
+    JScrollPane sp = new JScrollPane(jt);
+
+    JPanel sellPanel = new JPanel(new BorderLayout());
+    sellPanel.add(header, BorderLayout.NORTH);
+    sellPanel.add(sp, BorderLayout.CENTER);
+
+    cardPanel.add(sellPanel, "Sell Stocks");
+
+    jbtSell.addActionListener(e -> {
+      tryToSellStock(jtfName.getText(), jtfNumShares.getText());
+    });
+  }
+
+  private String[][] convertHoldsToData() {
+    StockAccount stockAccount = customer.getStockAccount();
+    List<StockEntry> stockEntries = stockAccount.getHoldlist();
+
+    String[][] data = new String[stockEntries.size()][3];
+    for (int i = 0; i < stockEntries.size(); i++) {
+      StockEntry stockEntry = stockEntries.get(i);
+
+      data[i][0] = stockEntry.getStockName();
+      Stock stock = Read.getStock(stockEntry.getStockName());
+      double price = stock.getPrice();
+      data[i][1] = cmInstance.convertToCurrentCurrency(price);
+      data[i][2] = stockEntry.getNumber() + "";
+    }
+    return data;
+  }
+
+  private void tryToSellStock(String inputStockName, String inputNumShares) {
+    StockAccount stockAccount = customer.getStockAccount();
+    // Stock stock = Read.getStock(inputStockName);
+    try {
+      int numShares = Integer.parseInt(inputNumShares);
+      if (stockAccount.sellStock(inputStockName, numShares)) {
+        String msg = "You've successfully sold " + numShares + " shares of " +
+        inputStockName;
+        JOptionPane.showMessageDialog(rootPane, msg);
+        
+      } else {
+        String msg = "Make sure the stock name you've enter is correct, "+
+        ", and the number of shares you want to sell is valid.";
+        JOptionPane.showMessageDialog(rootPane, msg);
+      }
+
+    } catch (NumberFormatException err) {
+      String msg = "Please enter a valid whole number of shares to buy";
+      JOptionPane.showMessageDialog(rootPane, msg);
+    }
+  }
+
+  private void createBuyPanel() {
+    JLabel jlbSecuritiesBalance = new JLabel("Securities account currently has "+
+    cmInstance.convertToCurrentCurrency(customer.getStockAccount().getBalance()));
+    JTextField jtfName = new JTextField("Stock name");
+    JTextField jtfNumShares = new JTextField("Number of shares");
 
     JLabel jlbBuy = new JLabel("Enter name of the stock to buy, and the number of shares to buy.");
 
-    JButton jbtBuy = new JButton("Confirm");
-    JPanel buyPanel = new JPanel(new GridLayout(0, 3));
-    buyPanel.add(jtfName);
-    buyPanel.add(jtfNumShares);
-    buyPanel.add(jbtBuy);
+    JButton jbtBuy = new JButton("Confirm to Buy");
+    JPanel buyActionPanel = new JPanel(new GridLayout(0, 3));
+    buyActionPanel.add(jtfName);
+    buyActionPanel.add(jtfNumShares);
+    buyActionPanel.add(jbtBuy);
 
     JPanel header = new JPanel(new GridLayout(3, 0));
     header.add(jlbSecuritiesBalance);
     header.add(jlbBuy);
-    header.add(buyPanel);
+    header.add(buyActionPanel);
 
-    // ***************************
+    String columnHeaders[] = {"Stock Name", "Current Price", "Price Change"};
 
-    String placeholderData[][] = {
-      {"1", "2", "3", "4"}
-    };
-    String columnHeaders[] = {"Symbol", "Name", "Current Price", "Percent Fluctuation"};
-
-    JTable jt = new JTable(placeholderData, columnHeaders);
+    JTable jt = new JTable(convertStocksToData(), columnHeaders);
     JScrollPane sp = new JScrollPane(jt);
 
-    JPanel mainPanel = new JPanel(new BorderLayout());
-    mainPanel.add(header, BorderLayout.NORTH);
-    mainPanel.add(sp, BorderLayout.CENTER);
+    JPanel buyPanel = new JPanel(new BorderLayout());
+    buyPanel.add(header, BorderLayout.NORTH);
+    buyPanel.add(sp, BorderLayout.CENTER);
 
-    add(mainPanel);
+    cardPanel.add(buyPanel, "Buy Stocks");
 
-    jbtBuy.addActionListener(new BuyListener());
+    jbtBuy.addActionListener(e -> {
+      tryToBuyStock(jtfName.getText(), jtfNumShares.getText());
+    });
   }
 
-  class BuyListener implements ActionListener {
-    public void actionPerformed(ActionEvent e) {
-      // if stock of such a name exists, and that the securities
-      // has enough balance to buy the specified number of shares
-      String stockName = jtfName.getText();
-      if (test()) { // there is no stock of this name
-        String msg = "There does not exist a stock with the name "+
-        stockName + ".";
-        PopupFrame popup = new PopupFrame(msg);
-        popup.showWindow();
+  private String[][] convertStocksToData() {
+    List<Stock> stocks = Read.readStock();
 
-      } else if (test()) { // the number of shares is negative
-        String msg = "You can only buy positive number of shares.";
-        PopupFrame popup = new PopupFrame(msg);
-        popup.showWindow();
+    String[][] data = new String[stocks.size()][3];
+    for (int i = 0; i < stocks.size(); i++) {
+      Stock stock = stocks.get(i);
 
-      } else if (test()) { // securities does not have enough balance
-        // to buy the specified number of shares
-        String msg = "Your securities account does not have enough " +
-        "balance to buy the specified number of shares.";
-        PopupFrame popup = new PopupFrame(msg);
-        popup.showWindow();
-
-      } else { // then we can buy
-
+      if (stock.isOnSale()) {
+        data[i][0] = stock.getName();
+        double price = stock.getPrice();
+        data[i][1] = cmInstance.convertToCurrentCurrency(price);
+        data[i][2] = getStockPriceChange(stock);
       }
+    }
+    return data;
+  }
+
+  private String getStockPriceChange(Stock stock) {
+    List<Double> prices = stock.getHistoryPrice();
+
+    if (prices.size() <= 1) {
+        return "-";
+    }
+
+    // Get the last price and the one before it to calculate the change
+    double lastPrice = prices.get(prices.size() - 1);
+    double previousPrice = prices.get(prices.size() - 2);
+
+    if (previousPrice == 0) {
+        return "Previous price is zero, cannot calculate percentage change";
+    }
+
+    double percentageChange = ((lastPrice - previousPrice) / previousPrice) * 100;
+
+    // Format the percentage change to two decimal places
+    DecimalFormat df = new DecimalFormat("#.##");
+    return df.format(percentageChange) + "%";
+  }
+
+  private void tryToBuyStock(String inputStockName, String inputNumShares) {
+    StockAccount stockAccount = customer.getStockAccount();
+    // Stock stock = Read.getStock(inputStockName);
+    try {
+      int numShares = Integer.parseInt(inputNumShares);
+      if (stockAccount.buyStock(inputStockName, numShares)) {
+        String msg = "You've successfully bought " + numShares + " of " +
+        inputStockName;
+        JOptionPane.showMessageDialog(rootPane, msg);
+        
+      } else {
+        String msg = "Make sure the stock name you've enter is correct, "+
+        ", the number of shares you want to buy is valid, and you have " +
+        "enough balance in your stock account to buy them.";
+        JOptionPane.showMessageDialog(rootPane, msg);
+      }
+
+    } catch (NumberFormatException err) {
+      String msg = "Please enter a valid whole number of shares to buy";
+      JOptionPane.showMessageDialog(rootPane, msg);
     }
   }
 
-  private boolean test() {
-    return true;
+  public void balanceUpdated(String customerName) {
+    if (customerName.equals(customer.get_name())) {
+      String msg = "There is a balance update to one of your accounts";
+      regenerateFrame(msg);
+    }
+  }
+
+  public void currencyUpdate() {
+    String msg = "The currency in use has been changed, or the current" +
+    " currency's conversion rate has been changed.";
+    regenerateFrame(msg);
+  }
+
+  public void stockUpdated() {
+    String msg = "There is an update to the stock market.";
+    regenerateFrame(msg);
+  }
+
+  private CustomerViewStocksFrame regenerateFrame(String msg) {
+    JOptionPane.showMessageDialog(rootPane, msg);
+    cmInstance.removeCurrencyModelListener(this);
+    mwInstance.removeBalanceListener(this);
+    mwInstance.removeStockListener(this);
+    this.dispose();
+    CustomerViewStocksFrame cvsFrame = new CustomerViewStocksFrame(customer);
+    cvsFrame.showWindow();
+    return cvsFrame;
   }
 
   public void showWindow() {
     // init frame info
-    this.setTitle( "View Stocks");
+    this.setTitle( "Customer View of Stocks");
     this.setSize( 1000, 600 );
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
     this.setLocationRelativeTo(null); // Center the frame on the screen

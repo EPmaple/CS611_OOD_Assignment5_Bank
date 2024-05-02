@@ -3,6 +3,9 @@ package stock;
 import utility.Read;
 import utility.Write;
 
+import java.util.Date;
+import java.util.List;
+
 public class Stock {
     private String name;
     private double price;
@@ -32,5 +35,8 @@ public class Stock {
     @Override
     public String toString(){
         return name+","+price+","+onSale;
+    }
+    public List<Double> getHistoryPrice(){
+        return Read.getStockHistoryPrice(name);
     }
 }

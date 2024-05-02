@@ -1,1 +1,2 @@
-Apple,1.5,true
+Apple,100.0,true
+Google,1500.0,true

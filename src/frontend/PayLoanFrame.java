@@ -6,21 +6,23 @@ import java.awt.*;
 
 import role.Customer;
 
-public class RequestLoanFrame extends JFrame implements CurrencyModelListener{
+public class PayLoanFrame extends JFrame implements CurrencyModelListener{
   private Middleware mwInstance = Middleware.getInstance();
   private CurrencyModel cmInstance = CurrencyModel.getInstance();
   Customer customer;
 
-  public RequestLoanFrame(Customer customer) {
+  public PayLoanFrame(Customer customer) {
     this.customer = customer;
     cmInstance.addCurrencyModelListener(this);
 
-    JLabel jlbMsg = new JLabel("Enter amount to loan: " + 
+    JLabel jlbLoan = new JLabel("Current loan: " + cmInstance.convertToCurrentCurrency(customer.get_loan_num()));
+
+    JLabel jlbMsg = new JLabel("Enter the amount of loan to pay off: " + 
     cmInstance.getCurrentCurrency());
 
     JTextField jtfLoan = new JTextField();
 
-    JButton jbtLoan = new JButton("Confirm to Request Loan");
+    JButton jbtLoan = new JButton("Confirm to Pay Loan");
     jbtLoan.addActionListener(e -> {
       String failureMsg = "Please enter a valid positive number";
       try {
@@ -30,12 +32,21 @@ public class RequestLoanFrame extends JFrame implements CurrencyModelListener{
           JOptionPane.showMessageDialog(rootPane, failureMsg);
 
         } else {
+          if (customer.pay_loan(loan)) {
+            String successMsg = "You have successfully paid off " + cmInstance.convertToCurrentCurrency(loan);
+            JOptionPane.showMessageDialog(this, successMsg);
+            cmInstance.removeCurrencyModelListener(this);
+            PayLoanFrame.this.dispose();
+            mwInstance.notifyBalanceUpdated(customer.get_name());
+
+          } else {
+            failureMsg = "Including interest, your checking does not have" +
+            " enough to pay off the specified amount";
+            JOptionPane.showMessageDialog(rootPane, failureMsg);
+
+          }
           customer.request_loan(loan);
-          String successMsg = "You have successfully acquired a loan of " + cmInstance.convertToCurrentCurrency(loan);
-          JOptionPane.showMessageDialog(rootPane, successMsg);
-          cmInstance.removeCurrencyModelListener(this);
-          RequestLoanFrame.this.dispose();
-          mwInstance.notifyBalanceUpdated(customer.get_name());
+
 
         }
 
@@ -44,7 +55,8 @@ public class RequestLoanFrame extends JFrame implements CurrencyModelListener{
       }
     });
 
-    JPanel mainPanel = new JPanel(new GridLayout(3,0));
+    JPanel mainPanel = new JPanel(new GridLayout(4,0));
+    mainPanel.add(jlbLoan);
     mainPanel.add(jlbMsg);
     mainPanel.add(jtfLoan);
     mainPanel.add(jbtLoan);
@@ -58,17 +70,17 @@ public class RequestLoanFrame extends JFrame implements CurrencyModelListener{
     regenerateFrame(msg);
   }
 
-  private RequestLoanFrame regenerateFrame(String msg) {
+  private PayLoanFrame regenerateFrame(String msg) {
     JOptionPane.showMessageDialog(rootPane, msg);
     cmInstance.removeCurrencyModelListener(this);
     this.dispose();
-    RequestLoanFrame rlFrame = new RequestLoanFrame(customer);
-    rlFrame.showWindow();
-    return rlFrame;
+    PayLoanFrame plFrame = new PayLoanFrame(customer);
+    plFrame.showWindow();
+    return plFrame;
   }
 
   public void showWindow() {
-    this.setTitle( "Requesting loan");
+    this.setTitle( "Pay loan");
     this.setSize( 500, 300 );
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
     this.setLocationRelativeTo(null); // Center the frame on the screen
