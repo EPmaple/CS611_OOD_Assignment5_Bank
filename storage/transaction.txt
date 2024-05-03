@@ -185,3 +185,16 @@ tony,stocking,transferOut,1010.0,1
 tony,checking,transferIn,1000.0,1
 tony,stocking,transferOut,1010.0,1
 tony,checking,transferIn,1000.0,1
+liao,saving,transferIn,1000.0,1
+liao,saving,transferIn,4001.0,1
+liao,saving,transferOut,1515.0,1
+liao,stocking,transferIn,1500.0,1
+liao,checking,transferIn,123.0,1
+tony,stocking,transferOut,1.01,1
+tony,checking,transferIn,1.0,1
+tony,stocking,transferOut,1.01,1
+tony,checking,transferIn,1.0,1
+tony,stocking,transferOut,1.01,1
+tony,checking,transferIn,1.0,1
+tony,checking,transferOut,1.01,1
+tony,saving,transferIn,1.0,1

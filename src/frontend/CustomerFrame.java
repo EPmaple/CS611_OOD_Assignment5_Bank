@@ -76,8 +76,15 @@ public class CustomerFrame extends JFrame implements BalanceListener, CurrencyMo
       rightPanel.add(jbtStockingAccount);
 
     } else {
-      JLabel jlbStockingAccount = new JLabel("Create Securities Account through Saving Account");
-      rightPanel.add(jlbStockingAccount);
+      JButton jbtCreateStockAcct = new JButton("How to create securities account");
+      jbtCreateStockAcct.addActionListener(e -> {
+        String msg = "To create a securities account:\n"+
+        "1.) Your saving account must first have more than " + cmInstance.convertToCurrentCurrency(5000) + "\n" +
+        "2.) Then from saving account, make a transfer of at least " + cmInstance.convertToCurrentCurrency(1000) +
+        " to your securities/stock account";
+        JOptionPane.showMessageDialog(rootPane, msg);
+      });
+      rightPanel.add(jbtCreateStockAcct);
 
     }
 
@@ -100,13 +107,23 @@ public class CustomerFrame extends JFrame implements BalanceListener, CurrencyMo
       rightPanel.add(jbtPayLoan);
 
     } else {
-      JButton jbtRequestLoan = new JButton("Request Loan");
-      jbtRequestLoan.addActionListener(e -> {
-        RequestLoanFrame rlFrame = new RequestLoanFrame(customer);
-        rlFrame.showWindow();
-        
-      });
-      rightPanel.add(jbtRequestLoan);
+      // meaning the customer does not have a checking account, and 
+      // we are requiring our customer to have at least a checking 
+      // account before making a loan
+      if (customer.getCheckingAccount() == null) {
+        JLabel jlbLoan = new JLabel("You must have a checking account "+
+        "before you can request a loan");
+        rightPanel.add(jlbLoan);
+
+      } else {
+        JButton jbtRequestLoan = new JButton("Request Loan");
+        jbtRequestLoan.addActionListener(e -> {
+          RequestLoanFrame rlFrame = new RequestLoanFrame(customer);
+          rlFrame.showWindow();
+          
+        });
+        rightPanel.add(jbtRequestLoan);
+      }
     }
 
     if (customer.has_check_account() || customer.has_saving_account() || customer.has_stock_account()) {
@@ -205,7 +222,7 @@ public class CustomerFrame extends JFrame implements BalanceListener, CurrencyMo
   public void showWindow() {
     // init frame info
     this.setTitle( "Customer: " + customer.get_name() );
-    this.setSize( 800, 350 );
+    this.setSize( 900, 300 );
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
     this.setLocationRelativeTo(null); // Center the frame on the screen
 

@@ -2,6 +2,8 @@ package frontend;
 
 import java.util.*;
 
+import javax.swing.JOptionPane;
+
 import account.BalanceListener;
 import role.AccountListener;
 import stock.StockListener;
@@ -57,6 +59,10 @@ public class Middleware {
   public void notifyBalanceUpdated(String customerName) {
     List<BalanceListener> localListeners = new ArrayList<BalanceListener>(accountListeners);
     System.out.println("Is there any listeners? " + accountListeners.size());
+    // String msg = "There is a balance update to one of " + customerName +
+    // "'s accounts";
+    // PopupFrame popup = new PopupFrame(msg);
+    // popup.showWindow();
     for (BalanceListener listener : localListeners) {
         // System.out.println(listener.toString());
         listener.balanceUpdated(customerName);

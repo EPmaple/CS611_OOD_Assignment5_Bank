@@ -189,13 +189,18 @@ public class ManagerViewStocksFrame extends JFrame implements StockListener{
     JButton jbtDeleteConfirm = new JButton("Confirm to Delete");
     jbtDeleteConfirm.addActionListener(e -> {
       String stockName = jtfDeleteStock.getText();
-      if (manager.changeStockStatus(stockName, false)) {
+      if (!manager.changeStockStatus(stockName, false)) {
+        String msg = "Please make sure you've correctly enter the name of the stock you want to delete";
+        JOptionPane.showMessageDialog(rootPane, msg);
+
+      } else if (manager.changeStockStatus(stockName, false) && !Read.getStock(stockName).isOnSale()) {
+        String msg = "Please make sure you've correctly enter the name of the stock you want to delete";
+        JOptionPane.showMessageDialog(rootPane, msg);
+
+      } else {
         // we were able to "delete" the stock by setting the onsale
         // status of the stock to be false
         String msg = "The stock " + stockName + " has been deleted";
-        JOptionPane.showMessageDialog(rootPane, msg);
-      } else {
-        String msg = "Please make sure you've correctly enter the name of the stock you want to delete";
         JOptionPane.showMessageDialog(rootPane, msg);
       }
     });

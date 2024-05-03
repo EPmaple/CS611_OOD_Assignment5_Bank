@@ -200,7 +200,7 @@ public class SavingAccountFrame extends JFrame implements AccountListener, Curre
         }
 
       } catch (NumberFormatException err) {
-        String msg = "To deposit, please enter a valid positive number";
+        String msg = "To transfer, please enter a valid positive number";
         JOptionPane.showMessageDialog(rootPane, msg);
       }
     }

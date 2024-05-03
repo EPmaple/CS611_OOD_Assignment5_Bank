@@ -90,10 +90,20 @@ public class CustomerViewTransactionFrame extends JFrame implements CurrencyMode
     // Stock account transactions
     if (customer.has_stock_account()) {
       StockAccount stockAccount = customer.getStockAccount();
-      stockAccount.updateTransactionList();
-      List<Stock_Transaction> stockTxnList = stockAccount.getTransactionList();
+
+      List<Stock_Transaction> stockTxnList = stockAccount.getStockTransactionList();
       JTable stockTable = new JTable(convertStockTransactionsToData(stockTxnList), new String[]{"Stock Name", "Txn Type", "Num Of Shares", "Cost", "Time"});
-      cardPanel.add(new JScrollPane(stockTable), "Stock");
+      JScrollPane leftPane = new JScrollPane(stockTable);
+
+      List<Transaction> txnList = stockAccount.getTransactionList();
+      JTable normalTxnTable = new JTable(convertTransactionsToData(txnList), new String[]{"Txn Type", "Txn Amt", "Time"});
+      JScrollPane rightPane = new JScrollPane(normalTxnTable);
+
+      JPanel mainStockPanel = new JPanel(new GridLayout(0, 2));
+      mainStockPanel.add(leftPane);
+      mainStockPanel.add(rightPane);
+
+      cardPanel.add(new JScrollPane(mainStockPanel), "Stock");
     }
 
   }
@@ -154,7 +164,7 @@ public class CustomerViewTransactionFrame extends JFrame implements CurrencyMode
   public void showWindow() {
     // init frame info
     this.setTitle( "Transactions of " + customer.get_name());
-    this.setSize( 700, 500 );
+    this.setSize( 850, 500 );
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
     this.setLocationRelativeTo(null); // Center the frame on the screen
 
