@@ -1,2 +1,3 @@
-Apple,100.0,true
 Google,1500.0,true
+Apple,150.0,true
+Shell,15.0,false

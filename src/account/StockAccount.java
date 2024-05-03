@@ -19,7 +19,8 @@ public class StockAccount extends Account {
     private String name;
     private double balance=0;
     private String type;
-    private List<Stock_Transaction> transactionList;
+    private List<Stock_Transaction> stockTransactionList;
+    private List<Transaction> transactionList;
     private List<StockEntry> Holdlist;
     private boolean hasStockingAccount = false;
     public StockAccount(String name,String balance,String type){
@@ -30,16 +31,23 @@ public class StockAccount extends Account {
     public String toString(){
         return name+","+balance+","+type;
     }
-    public void updateTransactionList(){
-        this.transactionList = Read.getHistoryStockTransactionAccount(name);
+    public void updateStockTransactionList(){
+        this.stockTransactionList = Read.getHistoryStockTransactionAccount(name);
     }
     public void updateHoldList(){
         this.Holdlist = Read.getStockHoldUser(name);
     }
-
-    public List<Stock_Transaction> getTransactionList() {
+    public void updateTransactionList(){
+        this.transactionList = Read.getHistoryTransactionAccount(name,type);
+    }
+    public List<Transaction> getTransactionList() {
         this.updateTransactionList();
         return transactionList;
+    }
+
+    public List<Stock_Transaction> getStockTransactionList() {
+        this.updateStockTransactionList();
+        return stockTransactionList;
     }
 
     public List<StockEntry> getHoldlist() {
@@ -61,6 +69,7 @@ public class StockAccount extends Account {
         Write.rewriteStockAccount(this);
         String time = tmInstance.getTime() + "";
         Write.writeTransaction(new Transaction(name,type,"transferIn",String.valueOf(amount),time));
+        mwInstance.notifyBalanceUpdated(this.name);
     }
     public boolean transferOut(double amount){
         if(balance<amount* (1.0+Account.transfer_rate)){
@@ -70,6 +79,7 @@ public class StockAccount extends Account {
         Write.rewriteStockAccount(this);
         String time = tmInstance.getTime() + "";
         Write.writeTransaction(new Transaction(name,type,"transferOut",String.valueOf(amount* (1.0+Account.transfer_rate)),time));
+        mwInstance.notifyBalanceUpdated(this.name);
         return true;
     }
     public boolean buyStock(String stockName,int number){
