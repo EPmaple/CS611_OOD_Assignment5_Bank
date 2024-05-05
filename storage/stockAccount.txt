@@ -1,1 +1,6 @@
 Gtl,1505.0,stocking
+tcc,1001.0,stocking
+jiao,5000.0,stocking
+matt,1001.0,stocking
+liao,1500.0,stocking
+tony,7427.969999999999,stocking

@@ -1,3 +1,4 @@
+package bank;
 import role.Customer;
 import role.Manager;
 import transaction.Stock_Transaction;
@@ -49,21 +50,21 @@ public class Bank {
         return false;
     }
     public static void main(String[] args) {
-        Bank bank = Bank.get_bank();
-        bank.createUser("Gtl","123456");
-        Customer customer=Read.get_customer("Gtl");
-        customer.log_in("123456");
-        customer.createCheckingAccount();
-        customer.createSavingAccount();
-        customer.getCheckingAccount().transferIn(100);
-        customer.getSavingAccount().transferOut(100);
-        customer.getSavingAccount().transferIn(60000);
-        customer.createStockingAccount();
-        Manager.get_manager().createStock("Apple","1.5");
-        customer.getStockAccount().buyStock("Apple",50);
-        customer.getStockAccount().sellStock("Apple",10);
-        customer.request_loan(500);
-        customer.pay_loan(10);
+        // Bank bank = Bank.get_bank();
+        // bank.createUser("Gtl","123456");
+        // Customer customer=Read.get_customer("Gtl");
+        // customer.log_in("123456");
+        // customer.createCheckingAccount();
+        // customer.createSavingAccount();
+        // customer.getCheckingAccount().transferIn(100);
+        // customer.getSavingAccount().transferOut(100);
+        // customer.getSavingAccount().transferIn(60000);
+        // customer.createStockingAccount();
+        // Manager.get_manager().createStock("Apple","1.5");
+        // customer.getStockAccount().buyStock("Apple",50);
+        // customer.getStockAccount().sellStock("Apple",10);
+        // customer.request_loan(500);
+        // customer.pay_loan(10);
     }
 
 }

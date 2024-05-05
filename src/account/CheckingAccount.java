@@ -4,9 +4,16 @@ import transaction.Transaction;
 import utility.Read;
 import utility.Write;
 
-import java.util.List;
+import java.util.*;
 
-public class CheckingAccount {
+import frontend.Middleware;
+import frontend.TimeModel;
+
+public class CheckingAccount extends Account{
+    private Middleware mwInstance = Middleware.getInstance();
+    private TimeModel tmInstance = TimeModel.getInstance();
+    // ***************************************
+
     private String name;
     private double balance=0;
     private String type;
@@ -30,6 +37,7 @@ public class CheckingAccount {
     }
 
     public List<Transaction> getTransactionList() {
+        this.updateTransactionList();
         return transactionList;
     }
 
@@ -45,7 +53,9 @@ public class CheckingAccount {
     public void getLoan(double amount){
         this.balance+=amount;
         Write.rewriteCheckingAccount(this);
-        Write.writeTransaction(new Transaction(name,type,"getLoan",String.valueOf(amount),"0"));
+        String time = tmInstance.getTime() + "";
+        Write.writeTransaction(new Transaction(name,type,"getLoan",String.valueOf(amount),time));
+        // mwInstance.notifyBalanceUpdated(this.name);
     }
     public boolean payLoan(double amount){
         if(balance<amount){
@@ -53,13 +63,17 @@ public class CheckingAccount {
         }
         this.balance-=amount;
         Write.rewriteCheckingAccount(this);
-        Write.writeTransaction(new Transaction(name,type,"payLoan",String.valueOf(amount),"0"));
+        String time = tmInstance.getTime() + "";
+        Write.writeTransaction(new Transaction(name,type,"payLoan",String.valueOf(amount),time));
+        // mwInstance.notifyBalanceUpdated(this.name);
         return true;
     }
     public void transferIn(double amount){
         this.balance+=amount;
         Write.rewriteCheckingAccount(this);
-        Write.writeTransaction(new Transaction(name,type,"transferIn",String.valueOf(amount),"0"));
+        String time = tmInstance.getTime() + "";
+        Write.writeTransaction(new Transaction(name,type,"transferIn",String.valueOf(amount),time));
+        mwInstance.notifyBalanceUpdated(this.name);
     }
     public boolean transferOut(double amount){
         if(balance<amount* (1.0+Account.transfer_rate)){
@@ -67,7 +81,12 @@ public class CheckingAccount {
         }
         this.balance-=amount* (1.0+Account.transfer_rate);
         Write.rewriteCheckingAccount(this);
-        Write.writeTransaction(new Transaction(name,type,"transferOut",String.valueOf(amount* (1.0+Account.transfer_rate)),"0"));
+        String time = tmInstance.getTime() + "";
+        Write.writeTransaction(new Transaction(name,type,"transferOut",String.valueOf(amount* (1.0+Account.transfer_rate)),time));
+        mwInstance.notifyBalanceUpdated(this.name);
         return true;
+    }
+    public void deleteAccount(){
+        Write.deleteCheckingAccount(this);
     }
 }

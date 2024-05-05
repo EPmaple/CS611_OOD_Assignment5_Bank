@@ -4,9 +4,17 @@ import transaction.Transaction;
 import utility.Read;
 import utility.Write;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class SavingAccount {
+import frontend.Middleware;
+import frontend.TimeModel;
+
+public class SavingAccount extends Account{
+    private Middleware mwInstance = Middleware.getInstance();
+    private TimeModel tmInstance = TimeModel.getInstance();
+    // ***************************************
+
     private String name;
     private double balance=0;
     private String type;
@@ -38,6 +46,7 @@ public class SavingAccount {
     }
 
     public List<Transaction> getTransactionList() {
+        this.updateTransactionList();
         return transactionList;
     }
 
@@ -59,7 +68,9 @@ public class SavingAccount {
     public void transferIn(double amount){
         this.balance+=amount;
         Write.rewriteSavingAccount(this);
-        Write.writeTransaction(new Transaction(name,type,"transferIn",String.valueOf(amount),"0"));
+        String time = tmInstance.getTime() + "";
+        Write.writeTransaction(new Transaction(name,type,"transferIn",String.valueOf(amount),time));
+        mwInstance.notifyBalanceUpdated(this.name);
     }
     public boolean transferOut(double amount){
         if(balance<amount* (1.0+Account.transfer_rate)){
@@ -72,7 +83,17 @@ public class SavingAccount {
         }
         this.balance-=amount* (1.0+Account.transfer_rate);
         Write.rewriteSavingAccount(this);
-        Write.writeTransaction(new Transaction(name,type,"transferOut",String.valueOf(amount* (1.0+Account.transfer_rate)),"0"));
+        String time = tmInstance.getTime() + "";
+        Write.writeTransaction(new Transaction(name,type,"transferOut",String.valueOf(amount* (1.0+Account.transfer_rate)),time));
+        mwInstance.notifyBalanceUpdated(this.name);
         return true;
+    }
+
+    public void addInterest(){
+        this.balance+=this.balance*Account.interest_rate;
+        Write.rewriteSavingAccount(this);
+    }
+    public void deleteAccount(){
+        Write.deleteSavingAccount(this);
     }
 }

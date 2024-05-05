@@ -1,21 +1,35 @@
 package role;
 import account.Account;
+import account.BalanceListener;
 import account.CheckingAccount;
 import account.SavingAccount;
 import account.StockAccount;
+import frontend.CurrencyModelListener;
+import frontend.Middleware;
 import utility.Read;
 import utility.Write;
+import utility.Constants;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class Customer extends User {
+    private Middleware mwInstance = Middleware.getInstance();
+    // ******************************************
+
     private String password;
     private boolean check_account=false;
     private boolean saving_account=false;
     private boolean stocking_account=false;
     private boolean has_loan = false;
     private double loan_num = 0;
+    private SavingAccount savingAccount;
+    private CheckingAccount checkingAccount;
+    private StockAccount stockAccount;
     public Customer(String name) {
         super(name, 5, EnumRole.Customer);
     }
@@ -28,6 +42,9 @@ public class Customer extends User {
         this.stocking_account = stocking_account.equals("true");
         this.has_loan = has_loan.equals("true");
         this.loan_num = Double.parseDouble(loan_num);
+        this.savingAccount = Read.getSavingAccount(name);
+        this.checkingAccount = Read.getCheckingAccount(name);
+        this.stockAccount = Read.getStockAccount(name);
     }
     public void setPassword(String new_password){
         password = new_password;
@@ -45,9 +62,6 @@ public class Customer extends User {
     public boolean has_stock_account(){
         return stocking_account;
     }
-    public double getLoan_num(){
-        return loan_num;
-    }
     public String get_password(){
         return password;
     }
@@ -62,10 +76,10 @@ public class Customer extends User {
         return this.id.toString()+","+name+","+password+","+check_account+","+saving_account+","+stocking_account+","+has_loan+","+loan_num;
     }
     public SavingAccount getSavingAccount(){
-        return Read.getSavingAccount(name);
+        return this.savingAccount;
     }
     public CheckingAccount getCheckingAccount(){
-        return  Read.getCheckingAccount(name);
+        return this.checkingAccount;
     }
     public boolean createSavingAccount(){
         if(saving_account){
@@ -75,6 +89,8 @@ public class Customer extends User {
         SavingAccount savingAccount = new SavingAccount(name,"0","saving","false");
         Write.rewriteSavingAccount(savingAccount);
         Write.rewriteUserInfo(this);
+        this.savingAccount = savingAccount;
+        mwInstance.notifyAccountUpdated(this.name);
         return true;
     }
     public boolean createCheckingAccount(){
@@ -85,9 +101,11 @@ public class Customer extends User {
         Write.rewriteCheckingAccount(checkingAccount);
         check_account = true;
         Write.rewriteUserInfo(this);
+        this.checkingAccount = checkingAccount;
+        mwInstance.notifyAccountUpdated(this.name);
         return true;
     }
-    public boolean request_loan(int loan_num){
+    public boolean request_loan(double loan_num){
         if(!check_account){
             return false;
         }
@@ -100,7 +118,45 @@ public class Customer extends User {
         Write.rewriteUserInfo(this);
         return true;
     }
-    public boolean pay_loan(int pay){
+
+    // public boolean pay_loan(double pay) {
+    //     if (!check_account || !has_loan) {
+    //         return false;
+    //     }
+
+    //     BigDecimal payAmount = new BigDecimal(String.valueOf(pay));
+    //     BigDecimal loanNum = new BigDecimal(String.valueOf(loan_num));
+    //     BigDecimal loanRate = new BigDecimal(String.valueOf(Account.loan_rate));
+
+    //     // Calculate the amount to pay considering the loan rate
+    //     BigDecimal totalPayable = payAmount.min(loanNum).multiply(loanRate.add(BigDecimal.ONE));
+        
+    //     // Delegate the payment to the checking account's payLoan method
+    //     boolean result = getCheckingAccount().payLoan(totalPayable.doubleValue());
+    //     System.out.println("checking account pay loan result: " + result);
+        
+    //     if (result) {
+    //         System.out.println("pay: " + pay);
+    //         System.out.println("loan_num before: " + loan_num);
+
+    //         // Subtract the actual pay amount from the loan number
+    //         loanNum = loanNum.subtract(payAmount.min(loanNum));
+    //         loan_num = loanNum.doubleValue(); // Updating the double representation
+    //         System.out.println("loan_num after: " + loan_num);
+    //     }
+
+    //     System.out.println("Check if the loan is completely paid off: " + (loanNum.compareTo(BigDecimal.ZERO) == 0));
+    //     // Check if the loan is completely paid off
+    //     if (loanNum.compareTo(BigDecimal.ZERO) == 0) {
+    //         has_loan = false;
+    //     }
+
+    //     // Persist any changes
+    //     Write.rewriteUserInfo(this);
+    //     return result;
+    // }
+
+    public boolean pay_loan(double pay){
         if(!check_account){
             return false;
         }
@@ -108,16 +164,21 @@ public class Customer extends User {
             return false;
         }
         boolean result = getCheckingAccount().payLoan((1.0+Account.loan_rate)*Math.min(pay,loan_num));
+        System.out.println("checking account pay loan result: " + result);
         if (result){
+            System.out.println("pay: " + pay);
+            System.out.println("loan_num before: " + loan_num);
             loan_num-=Math.min(pay,loan_num);
+            System.out.println("loan_num after: " + loan_num);
         }
-        if(loan_num==0){
+        System.out.println("Check if the loan is completely paid off: " + (loan_num==0.0));
+        if(loan_num==0.0){
             has_loan = false;
         }
         Write.rewriteUserInfo(this);
         return result;
     }
-    public boolean createStockingAccount(){
+    public boolean createStockingAccount(double transferAmt){
         if(has_stock_account()){
             return false;
         }
@@ -127,14 +188,47 @@ public class Customer extends User {
         if(this.getSavingAccount().getBalance()<5000){
             return false;
         }
-        this.getSavingAccount().transferOut(1000);
+        this.getSavingAccount().transferOut(transferAmt);
         StockAccount stockAccount = new StockAccount(name,"0","stocking");
-        stockAccount.transferIn(1000);
+        stockAccount.transferIn(transferAmt);
+        this.stockAccount = stockAccount;
         this.stocking_account = true;
         Write.rewriteUserInfo(this);
+        mwInstance.notifyAccountUpdated(this.name);
         return true;
     }
     public StockAccount getStockAccount(){
-        return Read.getStockAccount(name);
+        return this.stockAccount;
+    }
+
+    public boolean deleteCheckingAccount(){
+        if(!check_account){
+            return false;
+        }
+        if(has_loan){
+            return false;
+        }
+        getCheckingAccount().deleteAccount();
+        this.check_account = false;
+        Write.rewriteUserInfo(this);
+        return true;
+    }
+    public boolean deleteSavingAccount(){
+        if(!saving_account){
+            return false;
+        }
+        getSavingAccount().deleteAccount();
+        this.saving_account = false;
+        Write.rewriteUserInfo(this);
+        return true;
+    }
+    public boolean deleteStockAccount(){
+        if(!stocking_account){
+            return false;
+        }
+        getStockAccount().deleteAccount();
+        this.stocking_account = false;
+        Write.rewriteUserInfo(this);
+        return true;
     }
 }

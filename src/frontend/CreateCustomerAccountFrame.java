@@ -1,11 +1,14 @@
 package frontend;
 
+import bank.Bank;
+
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
 
 public class CreateCustomerAccountFrame extends JFrame{
-  private Middleware mwInstance = Middleware.getInstance();
+  private Bank bank = Bank.get_bank();
+
   private JTextField jtfUsername = new JTextField();
   private JPasswordField jtfPassword = new JPasswordField();
   private JPasswordField jtfRePassword = new JPasswordField();
@@ -53,32 +56,36 @@ public class CreateCustomerAccountFrame extends JFrame{
       String password = new String(jtfPassword.getPassword());
       String rePassword = new String(jtfRePassword.getPassword());
 
+      String msg = "";
+
       if (!password.equals(rePassword)) {
         jlbMessage.setText("Passwords do not match.");
-        System.out.println("Passwords do not match.");
+        // System.out.println("Passwords do not match.");
+
       } else {
-        if (mwInstance.createCustomerAccount(username, password)) {
-          jlbMessage.setText("Account successfully created.");
-          System.out.println("Account successfully created.");
+        if (bank.createUser(username, password)) {
+          msg = "Account successfully created.";
+          // showMessageDialog() is a blocking call, which pauses the execution
+          // of the subsequent code until the dialog is dismissed by the user 
+          JOptionPane.showMessageDialog(CreateCustomerAccountFrame.this, msg);
+          dispose();
+
         } else {
           jlbMessage.setText("Failed to create account.");
-          System.out.println("Failed to create account.");
+          // System.out.println("Failed to create account.");
         }
       }
     }
   }
 
-  public static void showWindow() {
-    // create a new frame
-    JFrame createCustomerAccountFrame = new CreateCustomerAccountFrame();
-
+  public void showWindow() {
     // init frame info
-    createCustomerAccountFrame.setTitle( "Create Customer Account" );
-    createCustomerAccountFrame.setSize( 300, 200 );
-    createCustomerAccountFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
-    createCustomerAccountFrame.setLocationRelativeTo(null); // Center the frame on the screen
+    this.setTitle( "Create Customer Account" );
+    this.setSize( 300, 200 );
+    this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE ); 
+    this.setLocationRelativeTo(null); // Center the frame on the screen
 
     // turn it on 
-    createCustomerAccountFrame.setVisible(true);
+    this.setVisible(true);
   }
 }

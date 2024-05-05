@@ -1,3 +1,4 @@
+package bank;
 import role.Customer;
 import role.EnumRole;
 import role.Manager;

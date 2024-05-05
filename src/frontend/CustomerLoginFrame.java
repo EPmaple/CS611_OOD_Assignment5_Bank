@@ -3,6 +3,8 @@ package frontend;
 import javax.swing.*;
 
 import role.Customer;
+import bank.Bank;
+import utility.*;
 
 import java.awt.event.*;
 import java.awt.*;
@@ -14,6 +16,7 @@ public class CustomerLoginFrame extends JFrame{
   private JTextField jtfUsername = new JTextField();
   private JPasswordField jtfPassword = new JPasswordField();
   private JLabel jlbMessage = new JLabel();
+  private Bank bank = Bank.get_bank();
 
   public CustomerLoginFrame() {
     // create buttons
@@ -55,24 +58,29 @@ public class CustomerLoginFrame extends JFrame{
 
   class LoginListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      // String username = jtfUsername.getText();
-      // // jtfPassword.getPassword() returns char[], and is converted to String
-      // String password = new String(jtfPassword.getPassword());
-      // if (mwInstance.login(username, password)) {
-      //   System.out.println("Login success.");
-      // } else {
-      //   jlbMessage.setText("Login failed.");
-      //   System.out.println("Login failed.");
-      // }
-      // System.out.println("Login button clicked");
-      CustomerFrame customerFrame = new CustomerFrame("Tony");
-      customerFrame.showWindow();
+      String inputUsername = jtfUsername.getText();
+      String inputPassword = new String(jtfPassword.getPassword());
+
+      Customer customer = Read.get_customer(inputUsername);
+
+      if (customer == null) {
+        // pop up joption pane to say "username or password is invalid"
+        JOptionPane.showMessageDialog(CustomerLoginFrame.this, "Invalid username or password.");
+
+      } else if (!customer.log_in(inputPassword)) {
+        // pop up joption pane to say "username or password is invalid"
+        JOptionPane.showMessageDialog(CustomerLoginFrame.this, "Invalid username or password.");
+
+      } else { // valid customer and password match up
+        CustomerFrame customerFrame = new CustomerFrame(customer);
+        customerFrame.showWindow();
+
+      }
     }
   }
 
   class CreateAccountListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      System.out.println("Create Account button clicked");
       CreateCustomerAccountFrame createCustomerAccountFrame = new CreateCustomerAccountFrame();
       createCustomerAccountFrame.showWindow();
     }
@@ -80,7 +88,6 @@ public class CustomerLoginFrame extends JFrame{
 
   class RecoverPasswordListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      System.out.println("Forgot Password button clicked");
       RecoverPasswordFrame recoverPasswordFrame = new RecoverPasswordFrame();
       recoverPasswordFrame.showWindow();
     }
