@@ -31,7 +31,7 @@ public class Customer extends User {
     private CheckingAccount checkingAccount;
     private StockAccount stockAccount;
     public Customer(String name) {
-        super(name, 5, EnumRole.Customer);
+        super(name, EnumRole.Customer);
     }
     public Customer(String uuid, String name, String password, String check_account,String saving_account,String stocking_account,String has_loan,String loan_num){
         super(name,EnumRole.Customer);

@@ -7,8 +7,13 @@ import java.util.UUID;
 // Singleton
 public class ManageAccount extends Account {
     private static ManageAccount instance;
+    private UUID id;
+    private String name;
+    private String password_hashing;
     public ManageAccount(UUID id, String name, String password_hashing) {
-        super(id, name, password_hashing, EnumAccount.Manage);
+        this.id = id;
+        this.name = name;
+        this.password_hashing = password_hashing;
     }
 
     public ManageAccount get(){
