@@ -113,7 +113,7 @@ public class ManagerViewCustomersFrame extends JFrame implements CurrencyModelLi
     regenerateFrame(msg);
   }
 
-  public void balanceUpdated(String accountType) {
+  public void balanceUpdated(String customerName) {
     String msg = "A new transaction has occurred.";
     regenerateFrame(msg);
   }

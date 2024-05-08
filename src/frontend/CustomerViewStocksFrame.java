@@ -72,8 +72,53 @@ public class CustomerViewStocksFrame extends JFrame implements BalanceListener, 
 
     createPanelsForTrade();
 
-    // ***************************
+    JButton jbtDelete = new JButton("Delete Account");
+    buttonPanel.add(jbtDelete);
+    jbtDelete.addActionListener(e -> {
+      // Show a confirmation dialog
+      int confirmed = JOptionPane.showConfirmDialog(rootPane,
+      "Do you want to delete this account?",
+      "Confirm Account Deletion",
+      JOptionPane.YES_NO_OPTION,
+      JOptionPane.WARNING_MESSAGE);
+
+      if (confirmed == JOptionPane.YES_OPTION) {
+        // Logic to delete the account
+        if (customer.deleteStockAccount()) {
+          JOptionPane.showMessageDialog(rootPane, "Account deleted successfully.");
+
+          // Close this window
+          deregisterListeners();
+          this.dispose();
+        } else {
+          String msg = "You cannot delete your securities account because "+
+          "you currently hold stocks";
+          JOptionPane.showMessageDialog(rootPane, msg);
+        }
+
+      }
+    });
   }
+
+  // class DeleteAccountListener implements ActionListener {
+  //   public void actionPerformed(ActionEvent e) {
+  //     // Show a confirmation dialog
+  //     int confirmed = JOptionPane.showConfirmDialog(rootPane,
+  //     "Do you want to delete this account?",
+  //     "Confirm Account Deletion",
+  //     JOptionPane.YES_NO_OPTION,
+  //     JOptionPane.WARNING_MESSAGE);
+
+  //     if (confirmed == JOptionPane.YES_OPTION) {
+  //       // Logic to delete the account
+  //       customer.deleteStockAccount();
+  //       JOptionPane.showMessageDialog(rootPane, "Account deleted successfully.");
+
+  //       // Close this window
+  //       dispose();
+  //     }
+  //   }
+  // }
 
   private void createPanelsForTrade() {
     createBuyPanel();
