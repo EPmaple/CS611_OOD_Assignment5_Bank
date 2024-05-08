@@ -2,15 +2,25 @@
 ## Submit By
 - Zhaozhan Huang | zhzh@bu.edu
 - Tianling Gong | tlgong@bu.edu
-- Tony Cen Cen | tcen@bu.edu
+- Tony Cen Cen | tcen17@bu.edu
 
 
 
 ## How to Run
 In the root directory of the project:
+If a "bin" folder does not already exists, create one with:
+```bash
+$ mkdir bin
+```
+Then if you are on windows
 ```bash
 $ javac -d ./bin ./src/**/*.java
 $ java ./bin/Main
+```
+Else if you are on mac/linux
+```bash
+$ javac -d ./bin ./src/**/*.java
+$ java -cp bin Main
 ```
 
 
@@ -32,6 +42,7 @@ $ java ./bin/Main
 https://docs.oracle.com/javase/tutorial/uiswing/
 https://www.javatpoint.com/java-swing
 https://www.geeksforgeeks.org/introduction-to-java-swing/
+https://www.baeldung.com/java-nested-hashmaps
 
 ## Files 
 ### ./src/account/Account.java
