@@ -1,4 +1,0 @@
-tony,1000.0,checking
-dam,123.0,checking
-w,12345.0,checking
-e,1012.0,checking
