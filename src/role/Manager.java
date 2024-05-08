@@ -34,6 +34,7 @@ public class Manager extends User {
     public boolean createStock(String stockName,String price){
         Stock stock = new Stock(stockName,price,"true");
         Write.rewriteStock(stock);
+        Write.writeStockPrice(stock);
         mwInstance.notifyStockUpdated();
         return true;
     }
@@ -43,6 +44,7 @@ public class Manager extends User {
             return false;
         }
         stock.setPrice(price);
+        Write.writeStockPrice(stock);
         mwInstance.notifyStockUpdated();
         return true;
     }

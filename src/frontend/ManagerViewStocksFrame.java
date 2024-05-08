@@ -28,7 +28,18 @@ public class ManagerViewStocksFrame extends JFrame implements StockListener{
   private CardLayout cardLayout = new CardLayout();
   private JPanel cardPanel;
 
+  private void deregisterListeners() {
+    mwInstance.removeStockListener(this);
+  }
+
   public ManagerViewStocksFrame() {
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
+
     mwInstance.addStockListener(this);
     // to create the panel responsible for updating the price of a
     // stock

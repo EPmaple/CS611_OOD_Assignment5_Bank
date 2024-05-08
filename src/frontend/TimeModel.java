@@ -29,7 +29,7 @@ public class TimeModel {
     }
   }
 
-  private static TimeModel instance = new TimeModel();
+  private static TimeModel instance;
 
   private TimeModel() {}
 

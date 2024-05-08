@@ -22,8 +22,20 @@ public class CustomerViewTransactionFrame extends JFrame implements CurrencyMode
   private Customer customer;
   private CardLayout cardLayout = new CardLayout();
   private JPanel cardPanel = new JPanel(cardLayout); // This panel will contain all the cards
+
+  private void deregisterListeners() {
+    cmInstance.removeCurrencyModelListener(this);
+    mwInstance.removeBalanceListener(this);
+  }
   
   public CustomerViewTransactionFrame(Customer customer) {
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
+
     this.customer = customer;
     cmInstance.addCurrencyModelListener(this);
     mwInstance.addBalanceListener(this);

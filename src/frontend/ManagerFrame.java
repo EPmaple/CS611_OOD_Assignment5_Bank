@@ -10,7 +10,18 @@ public class ManagerFrame extends JFrame implements TimeModelListener{
   private Manager manager;
   private TimeModel timeInstance = TimeModel.getInstance();
 
+  private void deregisterListeners() {
+    timeInstance.removeTimeModelListener(this);
+  }
+
   public ManagerFrame(Manager manager) {
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
+
     timeInstance.addTimeModelListener(this);
     this.manager = manager;
 

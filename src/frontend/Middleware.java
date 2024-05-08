@@ -12,7 +12,7 @@ import java.io.*;
 
 public class Middleware {
   // singleton
-  private static Middleware instance = new Middleware();
+  private static Middleware instance;
   private Middleware() {}
   public static Middleware getInstance() {
     if (instance == null) {

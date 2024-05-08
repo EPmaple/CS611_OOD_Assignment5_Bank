@@ -53,8 +53,24 @@ public class DailyReportFrame extends JFrame implements TimeModelListener, Balan
     reportFrame.showWindow();
     return reportFrame;
   }
+
+  private void deregisterListeners() {
+    System.out.println("Deregistering listeners...");
+    tmInstance.removeTimeModelListener(this);
+    mwInstance.removeBalanceListener(this);
+    cmInstance.removeCurrencyModelListener(this);
+    System.out.println("Listeners deregistered.");
+}
+
   
   public DailyReportFrame(Manager manager) {
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
+
     tmInstance.addTimeModelListener(this);
     mwInstance.addBalanceListener(this);
     cmInstance.addCurrencyModelListener(this);

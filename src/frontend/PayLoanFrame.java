@@ -15,6 +15,13 @@ public class PayLoanFrame extends JFrame implements CurrencyModelListener{
     this.customer = customer;
     cmInstance.addCurrencyModelListener(this);
 
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
+
     JLabel jlbLoan = new JLabel("Current loan: " + cmInstance.convertToCurrentCurrency(customer.get_loan_num()));
 
     JLabel jlbMsg = new JLabel("Enter the amount of loan to pay off: " + 
@@ -45,7 +52,7 @@ public class PayLoanFrame extends JFrame implements CurrencyModelListener{
             JOptionPane.showMessageDialog(rootPane, failureMsg);
 
           }
-          customer.request_loan(loan);
+          // customer.request_loan(loan);
 
 
         }
@@ -77,6 +84,10 @@ public class PayLoanFrame extends JFrame implements CurrencyModelListener{
     PayLoanFrame plFrame = new PayLoanFrame(customer);
     plFrame.showWindow();
     return plFrame;
+  }
+
+  private void deregisterListeners() {
+    cmInstance.removeCurrencyModelListener(this);
   }
 
   public void showWindow() {

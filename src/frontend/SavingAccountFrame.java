@@ -25,7 +25,19 @@ public class SavingAccountFrame extends JFrame implements AccountListener, Curre
   JLabel jlbBalance = new JLabel();
   JComboBox<String> jcbCurrencyOptions = cmInstance.createCurrencyComboBox();
 
+  private void deregisterListeners() {
+    mwInstance.removeAccountListener(this);
+    cmInstance.removeCurrencyModelListener(this);
+  }
+
   public SavingAccountFrame(Customer customer) {
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
+
     mwInstance.addAccountListener(this);
     cmInstance.addCurrencyModelListener(this);
     this.customer = customer;
@@ -243,11 +255,11 @@ public class SavingAccountFrame extends JFrame implements AccountListener, Curre
     this.setVisible(true);
   }
 
-  public void accountUpdated(String accountType) {
-    String msg = "There is an update to your " + accountType + " account";
-    // parentFrame = parentFrame.regenerateFrame(msg);
-    // customer.removeCustomerListener(this);
-    regenerateFrame(msg);
+  public void accountUpdated(String customerName) {
+    if (customerName.equals(customer.get_name())) {
+      String msg = "There is a balance update to one of your accounts";
+      regenerateFrame(msg);
+    }
   }
 
   private SavingAccountFrame regenerateFrame(String msg) {

@@ -25,7 +25,20 @@ public class CustomerFrame extends JFrame implements BalanceListener, CurrencyMo
 
   JComboBox<String> jcbCurrencyOptions = cmInstance.createCurrencyComboBox();
 
+  private void deregisterListeners() {
+    cmInstance.removeCurrencyModelListener(this);
+    mwInstance.removeBalanceListener(this);
+    mwInstance.removeAccountListener(this);
+  }
+
   public CustomerFrame(Customer customer) {
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
+
     this.customer = customer;
     cmInstance.addCurrencyModelListener(this);
     mwInstance.addBalanceListener(this);

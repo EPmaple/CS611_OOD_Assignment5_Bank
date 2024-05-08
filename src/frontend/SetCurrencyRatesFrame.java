@@ -12,7 +12,19 @@ public class SetCurrencyRatesFrame extends JFrame implements SetRatesListener{
   private JComboBox<String> jcbToCurrency = cmInstance.createCurrencyComboBox();
   private JTextField jtfRate = new JTextField();
 
+  private void deregisterListeners() {
+    cmInstance.removeSetRatesListener(this);
+  }
+
   public SetCurrencyRatesFrame() {
+
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
+
     cmInstance.addSetRatesListener(this);
 
     JLabel jlbFrom = new JLabel("From");
