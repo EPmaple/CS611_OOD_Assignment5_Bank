@@ -18,7 +18,7 @@ public class CurrencyModel {
   public static final String EURO = "€";
   private String currentCurrency;
 
-  private static CurrencyModel instance = new CurrencyModel();
+  private static CurrencyModel instance;
 
   private  List<CurrencyModelListener> listeners = new ArrayList<CurrencyModelListener>();
 
@@ -142,6 +142,7 @@ public class CurrencyModel {
     return this.currentCurrency;
   }
 
+  // converts from current currency to DOLLAR for storage
   public double convertToCurrencyForStorage(double number) {
     double rate = getRate(currentCurrency, DOLLAR);
     double result = number * rate;

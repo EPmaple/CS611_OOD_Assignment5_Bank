@@ -29,7 +29,20 @@ public class CustomerViewStocksFrame extends JFrame implements BalanceListener, 
   private CardLayout cardLayout = new CardLayout();
   private JPanel cardPanel = new JPanel(cardLayout);
 
+  private void deregisterListeners() {
+    cmInstance.removeCurrencyModelListener(this);
+    mwInstance.removeBalanceListener(this);
+    mwInstance.removeStockListener(this);
+  }
+
   public CustomerViewStocksFrame(Customer customer) {
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
+
     this.customer = customer;
     mwInstance.addBalanceListener(this);
     cmInstance.addCurrencyModelListener(this);

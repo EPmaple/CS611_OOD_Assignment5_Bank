@@ -15,6 +15,13 @@ public class RequestLoanFrame extends JFrame implements CurrencyModelListener{
     this.customer = customer;
     cmInstance.addCurrencyModelListener(this);
 
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
+
     JLabel jlbMsg = new JLabel("Enter amount to loan: " + 
     cmInstance.getCurrentCurrency());
 
@@ -75,5 +82,9 @@ public class RequestLoanFrame extends JFrame implements CurrencyModelListener{
 
     // turn it on 
     this.setVisible(true);
+  }
+
+  private void deregisterListeners() {
+    cmInstance.removeCurrencyModelListener(this);
   }
 }

@@ -27,11 +27,23 @@ public class BankingAccountFrame extends JFrame implements AccountListener, Curr
   JLabel jlbBalance = new JLabel();
   JComboBox<String> jcbCurrencyOptions = cmInstance.createCurrencyComboBox();
 
+  private void deregisterListeners() {
+    mwInstance.removeAccountListener(this);
+    cmInstance.removeCurrencyModelListener(this);
+  }
+
   public BankingAccountFrame(Customer customer, String accountType) {
     mwInstance.addAccountListener(this);
     cmInstance.addCurrencyModelListener(this);
     this.customer = customer;
     this.accountType = accountType;
+
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
 
     JLabel jlbDeposit = new JLabel("Enter amount to deposit: " +
     cmInstance.getCurrentCurrency());
@@ -299,12 +311,19 @@ public class BankingAccountFrame extends JFrame implements AccountListener, Curr
     this.setVisible(true);
   }
 
-  public void accountUpdated(String accountType) {
-    String msg = "There is an update to your " + accountType + " account";
-    // parentFrame = parentFrame.regenerateFrame(msg);
-    // customer.removeCustomerListener(this);
-    regenerateFrame(msg);
+  public void accountUpdated(String customerName) {
+    if (customerName.equals(customer.get_name())) {
+      String msg = "There is a balance update to one of your accounts";
+      regenerateFrame(msg);
+    }
   }
+
+  // public void accountUpdated(String accountType) {
+  //   String msg = "There is an update to your " + accountType + " account";
+  //   // parentFrame = parentFrame.regenerateFrame(msg);
+  //   // customer.removeCustomerListener(this);
+  //   regenerateFrame(msg);
+  // }
 
   private void regenerateFrame(String msg) {
     JOptionPane.showMessageDialog(rootPane, msg);

@@ -15,12 +15,22 @@ import java.awt.*;
 public class ManagerViewCustomersFrame extends JFrame implements CurrencyModelListener, BalanceListener{
   private CurrencyModel cmInstance = CurrencyModel.getInstance();
   private Middleware mwInstance = Middleware.getInstance();
-
-  // private JTextField jtfViewDetails = new JTextField("Enter name of customer to view details");
+  
+  private void deregisterListeners() {
+    cmInstance.removeCurrencyModelListener(this);
+    mwInstance.removeBalanceListener(this);
+  }
 
   private JComboBox<String> jcbCurrencyOptions = cmInstance.createCurrencyComboBox();
 
   public ManagerViewCustomersFrame() {
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+          deregisterListeners();
+      }
+    });
+
     cmInstance.addCurrencyModelListener(this);
     mwInstance.addBalanceListener(this);
 

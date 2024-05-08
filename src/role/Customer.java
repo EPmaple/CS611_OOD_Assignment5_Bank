@@ -188,6 +188,8 @@ public class Customer extends User {
         if(this.getSavingAccount().getBalance()<5000){
             return false;
         }
+        this.getSavingAccount().setHasStockingAccount(true);
+        Write.rewriteSavingAccount(this.getSavingAccount());
         this.getSavingAccount().transferOut(transferAmt);
         StockAccount stockAccount = new StockAccount(name,"0","stocking");
         stockAccount.transferIn(transferAmt);
