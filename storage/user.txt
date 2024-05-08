@@ -1,5 +1,0 @@
-0af7b11e-d374-43a0-80e5-08136d7538fb,1,1,false,true,false,false,0.0
-a0a9848c-3367-4010-beeb-080078a43225,tony,1,false,false,false,false,0.0
-98ec0ce0-d160-4d2e-9098-50cfeadb9845,lol,1,true,false,false,false,0.0
-6c4e3ce9-a65b-4ef7-8bda-dae640b2e852,qwer,1,false,false,false,false,0.0
-780be219-851b-40d2-ab8f-8d221ac1c640,asd,1,false,false,false,false,0.0
