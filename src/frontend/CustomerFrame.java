@@ -10,9 +10,10 @@ import utility.*;
 import java.awt.event.*;
 import java.awt.*;
 
-public class CustomerFrame extends JFrame implements BalanceListener, CurrencyModelListener, AccountListener{
+public class CustomerFrame extends JFrame implements BalanceListener, CurrencyModelListener, AccountListener, TimeModelListener{
   private Middleware mwInstance = Middleware.getInstance();
   private CurrencyModel cmInstance = CurrencyModel.getInstance();
+  private TimeModel timeInstance = TimeModel.getInstance(); 
   private Customer customer;
   // private CheckingAccount checkingAccount;
   private JButton jbtCheckingAccount = new JButton();
@@ -29,6 +30,7 @@ public class CustomerFrame extends JFrame implements BalanceListener, CurrencyMo
     cmInstance.removeCurrencyModelListener(this);
     mwInstance.removeBalanceListener(this);
     mwInstance.removeAccountListener(this);
+    timeInstance.removeTimeModelListener(this);
   }
 
   public CustomerFrame(Customer customer) {
@@ -43,6 +45,7 @@ public class CustomerFrame extends JFrame implements BalanceListener, CurrencyMo
     cmInstance.addCurrencyModelListener(this);
     mwInstance.addBalanceListener(this);
     mwInstance.addAccountListener(this);
+    timeInstance.addTimeModelListener(this);
     /*
      * If account info is null, or empty, then show create button, else take
      * the info and create another button that allows for viewing
@@ -232,6 +235,11 @@ public class CustomerFrame extends JFrame implements BalanceListener, CurrencyMo
     }
   }
 
+  public void timeUpdate() {
+    String msg = "There is a time update";
+    regenerateFrame(msg);
+  }
+
   public void showWindow() {
     // init frame info
     this.setTitle( "Customer: " + customer.get_name() );
@@ -248,6 +256,7 @@ public class CustomerFrame extends JFrame implements BalanceListener, CurrencyMo
     cmInstance.removeCurrencyModelListener(this);
     mwInstance.removeBalanceListener(this);
     mwInstance.removeAccountListener(this);
+    timeInstance.removeTimeModelListener(this);
     this.dispose();
     CustomerFrame customerFrame = new CustomerFrame(customer);
     customerFrame.showWindow();

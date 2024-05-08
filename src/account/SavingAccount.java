@@ -95,5 +95,6 @@ public class SavingAccount extends Account{
     }
     public void deleteAccount(){
         Write.deleteSavingAccount(this);
+        mwInstance.notifyBalanceUpdated(this.name);
     }
 }
