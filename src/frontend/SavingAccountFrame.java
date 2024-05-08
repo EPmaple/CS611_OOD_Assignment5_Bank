@@ -104,11 +104,7 @@ public class SavingAccountFrame extends JFrame implements AccountListener, Curre
     // delete button
     JButton jbtDelete = new JButton("Delete Account");
     header.add(jbtDelete);
-    jbtDelete.addActionListener(new DeleteAccountListener());
-  }
-
-  class DeleteAccountListener implements ActionListener {
-    public void actionPerformed(ActionEvent e) {
+    jbtDelete.addActionListener(e -> {
       // Show a confirmation dialog
       int confirmed = JOptionPane.showConfirmDialog(rootPane,
       "Do you want to delete this account?",
@@ -118,14 +114,41 @@ public class SavingAccountFrame extends JFrame implements AccountListener, Curre
 
       if (confirmed == JOptionPane.YES_OPTION) {
         // Logic to delete the account
-        customer.getSavingAccount().deleteAccount();
-        JOptionPane.showMessageDialog(rootPane, "Account deleted successfully.");
+        if (customer.deleteSavingAccount()) {
+          JOptionPane.showMessageDialog(rootPane, "Account deleted successfully.");
+  
+          // Close this window
+          deregisterListeners();
+          this.dispose();
+        } else {
+          String msg = "You cannot delete your saving account because "+
+          "you currently have a securities account";
+          JOptionPane.showMessageDialog(rootPane, msg);
+        }
 
-        // Close this window
-        dispose();
       }
-    }
+    });
   }
+
+  // class DeleteAccountListener implements ActionListener {
+  //   public void actionPerformed(ActionEvent e) {
+  //     // Show a confirmation dialog
+  //     int confirmed = JOptionPane.showConfirmDialog(rootPane,
+  //     "Do you want to delete this account?",
+  //     "Confirm Account Deletion",
+  //     JOptionPane.YES_NO_OPTION,
+  //     JOptionPane.WARNING_MESSAGE);
+
+  //     if (confirmed == JOptionPane.YES_OPTION) {
+  //       // Logic to delete the account
+  //       customer.deleteSavingAccount();
+  //       JOptionPane.showMessageDialog(rootPane, "Account deleted successfully.");
+
+  //       // Close this window
+  //       dispose();
+  //     }
+  //   }
+  // }
 
   // ***************************************
 

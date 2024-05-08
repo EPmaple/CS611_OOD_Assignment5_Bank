@@ -27,9 +27,9 @@ public class Customer extends User {
     private boolean stocking_account=false;
     private boolean has_loan = false;
     private double loan_num = 0;
-    private SavingAccount savingAccount;
-    private CheckingAccount checkingAccount;
-    private StockAccount stockAccount;
+    // private SavingAccount savingAccount;
+    // private CheckingAccount checkingAccount;
+    // private StockAccount stockAccount;
     public Customer(String name) {
         super(name, EnumRole.Customer);
     }
@@ -42,9 +42,9 @@ public class Customer extends User {
         this.stocking_account = stocking_account.equals("true");
         this.has_loan = has_loan.equals("true");
         this.loan_num = Double.parseDouble(loan_num);
-        this.savingAccount = Read.getSavingAccount(name);
-        this.checkingAccount = Read.getCheckingAccount(name);
-        this.stockAccount = Read.getStockAccount(name);
+        // this.savingAccount = Read.getSavingAccount(name);
+        // this.checkingAccount = Read.getCheckingAccount(name);
+        // this.stockAccount = Read.getStockAccount(name);
     }
     public void setPassword(String new_password){
         password = new_password;
@@ -76,10 +76,10 @@ public class Customer extends User {
         return this.id.toString()+","+name+","+password+","+check_account+","+saving_account+","+stocking_account+","+has_loan+","+loan_num;
     }
     public SavingAccount getSavingAccount(){
-        return this.savingAccount;
+        return Read.getSavingAccount(name);
     }
     public CheckingAccount getCheckingAccount(){
-        return this.checkingAccount;
+        return Read.getCheckingAccount(name);
     }
     public boolean createSavingAccount(){
         if(saving_account){
@@ -89,7 +89,7 @@ public class Customer extends User {
         SavingAccount savingAccount = new SavingAccount(name,"0","saving","false");
         Write.rewriteSavingAccount(savingAccount);
         Write.rewriteUserInfo(this);
-        this.savingAccount = savingAccount;
+        // this.savingAccount = savingAccount;
         mwInstance.notifyAccountUpdated(this.name);
         return true;
     }
@@ -101,7 +101,7 @@ public class Customer extends User {
         Write.rewriteCheckingAccount(checkingAccount);
         check_account = true;
         Write.rewriteUserInfo(this);
-        this.checkingAccount = checkingAccount;
+        // this.checkingAccount = checkingAccount;
         mwInstance.notifyAccountUpdated(this.name);
         return true;
     }
@@ -118,43 +118,6 @@ public class Customer extends User {
         Write.rewriteUserInfo(this);
         return true;
     }
-
-    // public boolean pay_loan(double pay) {
-    //     if (!check_account || !has_loan) {
-    //         return false;
-    //     }
-
-    //     BigDecimal payAmount = new BigDecimal(String.valueOf(pay));
-    //     BigDecimal loanNum = new BigDecimal(String.valueOf(loan_num));
-    //     BigDecimal loanRate = new BigDecimal(String.valueOf(Account.loan_rate));
-
-    //     // Calculate the amount to pay considering the loan rate
-    //     BigDecimal totalPayable = payAmount.min(loanNum).multiply(loanRate.add(BigDecimal.ONE));
-        
-    //     // Delegate the payment to the checking account's payLoan method
-    //     boolean result = getCheckingAccount().payLoan(totalPayable.doubleValue());
-    //     System.out.println("checking account pay loan result: " + result);
-        
-    //     if (result) {
-    //         System.out.println("pay: " + pay);
-    //         System.out.println("loan_num before: " + loan_num);
-
-    //         // Subtract the actual pay amount from the loan number
-    //         loanNum = loanNum.subtract(payAmount.min(loanNum));
-    //         loan_num = loanNum.doubleValue(); // Updating the double representation
-    //         System.out.println("loan_num after: " + loan_num);
-    //     }
-
-    //     System.out.println("Check if the loan is completely paid off: " + (loanNum.compareTo(BigDecimal.ZERO) == 0));
-    //     // Check if the loan is completely paid off
-    //     if (loanNum.compareTo(BigDecimal.ZERO) == 0) {
-    //         has_loan = false;
-    //     }
-
-    //     // Persist any changes
-    //     Write.rewriteUserInfo(this);
-    //     return result;
-    // }
 
     public boolean pay_loan(double pay){
         if(!check_account){
@@ -193,14 +156,14 @@ public class Customer extends User {
         this.getSavingAccount().transferOut(transferAmt);
         StockAccount stockAccount = new StockAccount(name,"0","stocking");
         stockAccount.transferIn(transferAmt);
-        this.stockAccount = stockAccount;
+        // this.stockAccount = stockAccount;
         this.stocking_account = true;
         Write.rewriteUserInfo(this);
         mwInstance.notifyAccountUpdated(this.name);
         return true;
     }
     public StockAccount getStockAccount(){
-        return this.stockAccount;
+        return Read.getStockAccount(name);
     }
 
     public boolean deleteCheckingAccount(){
@@ -213,24 +176,33 @@ public class Customer extends User {
         getCheckingAccount().deleteAccount();
         this.check_account = false;
         Write.rewriteUserInfo(this);
+        mwInstance.notifyAccountUpdated(this.name);
         return true;
     }
     public boolean deleteSavingAccount(){
         if(!saving_account){
             return false;
         }
+        if (stocking_account) {
+            return false;
+        }
         getSavingAccount().deleteAccount();
         this.saving_account = false;
         Write.rewriteUserInfo(this);
+        mwInstance.notifyAccountUpdated(this.name);
         return true;
     }
     public boolean deleteStockAccount(){
         if(!stocking_account){
             return false;
         }
+        if (!getStockAccount().getHoldlist().isEmpty()) {
+            return false;
+        }
         getStockAccount().deleteAccount();
         this.stocking_account = false;
         Write.rewriteUserInfo(this);
+        mwInstance.notifyAccountUpdated(this.name);
         return true;
     }
 }

@@ -40,6 +40,7 @@ $ java -cp bin Main
 
 ## Citations
 https://docs.oracle.com/javase/tutorial/uiswing/
+https://docs.oracle.com/javase%2Ftutorial%2Fuiswing%2F%2F/events/windowlistener.html
 https://www.javatpoint.com/java-swing
 https://www.geeksforgeeks.org/introduction-to-java-swing/
 https://www.baeldung.com/java-nested-hashmaps

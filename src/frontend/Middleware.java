@@ -34,12 +34,12 @@ public class Middleware {
       listeners.remove(listener);
   }
 
-  public void notifyAccountUpdated(String accountType) {
+  public void notifyAccountUpdated(String customerName) {
     List<AccountListener> localListeners = new ArrayList<AccountListener>(listeners);
     // System.out.println("Is there any listeners?");
     for (AccountListener listener : localListeners) {
         // System.out.println(listener.toString());
-        listener.accountUpdated(accountType);
+        listener.accountUpdated(customerName);
     }
   }
 
