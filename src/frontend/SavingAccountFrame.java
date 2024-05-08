@@ -13,9 +13,10 @@ import java.awt.*;
 import java.util.List;
 import java.util.ArrayList;
 
-public class SavingAccountFrame extends JFrame implements AccountListener, CurrencyModelListener{
+public class SavingAccountFrame extends JFrame implements AccountListener, CurrencyModelListener, TimeModelListener{
   private Middleware mwInstance = Middleware.getInstance();
   private CurrencyModel cmInstance = CurrencyModel.getInstance();
+  private TimeModel timeInstance = TimeModel.getInstance();
   JTextField jtfDeposit = new JTextField();
   JTextField jtfWithdraw = new JTextField();
 
@@ -28,6 +29,7 @@ public class SavingAccountFrame extends JFrame implements AccountListener, Curre
   private void deregisterListeners() {
     mwInstance.removeAccountListener(this);
     cmInstance.removeCurrencyModelListener(this);
+    timeInstance.removeTimeModelListener(this);
   }
 
   public SavingAccountFrame(Customer customer) {
@@ -40,6 +42,7 @@ public class SavingAccountFrame extends JFrame implements AccountListener, Curre
 
     mwInstance.addAccountListener(this);
     cmInstance.addCurrencyModelListener(this);
+    timeInstance.addTimeModelListener(this);
     this.customer = customer;
 
     JLabel jlbDeposit = new JLabel("Enter amount to deposit: " +
@@ -58,7 +61,7 @@ public class SavingAccountFrame extends JFrame implements AccountListener, Curre
     withdrawPanel.add(jtfWithdraw);
     withdrawPanel.add(jbtWithdraw);
 
-    JPanel header = new JPanel(new GridLayout(0, 2));
+    JPanel header = new JPanel(new GridLayout(0, 3));
     header.add(jcbCurrencyOptions);
     header.add(jlbBalance);
 
@@ -97,6 +100,31 @@ public class SavingAccountFrame extends JFrame implements AccountListener, Curre
     jbtWithdraw.addActionListener(new WithdrawListener());
     jbtTransfer.addActionListener(new TransferListener());
     jcbCurrencyOptions.addActionListener(new ChangeCurrencyListener());
+
+    // delete button
+    JButton jbtDelete = new JButton("Delete Account");
+    header.add(jbtDelete);
+    jbtDelete.addActionListener(new DeleteAccountListener());
+  }
+
+  class DeleteAccountListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      // Show a confirmation dialog
+      int confirmed = JOptionPane.showConfirmDialog(rootPane,
+      "Do you want to delete this account?",
+      "Confirm Account Deletion",
+      JOptionPane.YES_NO_OPTION,
+      JOptionPane.WARNING_MESSAGE);
+
+      if (confirmed == JOptionPane.YES_OPTION) {
+        // Logic to delete the account
+        customer.getSavingAccount().deleteAccount();
+        JOptionPane.showMessageDialog(rootPane, "Account deleted successfully.");
+
+        // Close this window
+        dispose();
+      }
+    }
   }
 
   // ***************************************
@@ -266,6 +294,7 @@ public class SavingAccountFrame extends JFrame implements AccountListener, Curre
     JOptionPane.showMessageDialog(rootPane, msg);
     mwInstance.removeAccountListener(this);
     cmInstance.removeCurrencyModelListener(this);
+    timeInstance.removeTimeModelListener(this);
     this.dispose();
     SavingAccountFrame saFrame = new SavingAccountFrame(customer);
     saFrame.showWindow();
@@ -276,6 +305,11 @@ public class SavingAccountFrame extends JFrame implements AccountListener, Curre
     String msg = "The currency in use has been changed, or the current" +
     " currency's conversion rate has been changed.";
     // cmInstance.removeCurrencyModelListener(this);
+    regenerateFrame(msg);
+  }
+
+  public void timeUpdate() {
+    String msg = "There is a time update";
     regenerateFrame(msg);
   }
 }

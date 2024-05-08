@@ -1,0 +1,4 @@
+tony,checking,transferIn,1000.0,0
+tony,saving,transferIn,10000.0,0
+tony,saving,transferOut,5050.0,0
+tony,stocking,transferIn,5000.0,0
