@@ -1,2 +1,0 @@
-tony,5000.0,stocking
-lol,1500.0,stocking
